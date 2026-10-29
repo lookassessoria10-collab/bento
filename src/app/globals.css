@@ -1,31 +1,36 @@
 @import "tailwindcss";
 
-/* Bento — tokens do design system (modo claro padrão) */
+/* Bento — tokens do design system (paleta da marca: #165D3B · #3E9B5F · #A7D572) */
 :root {
-  --background: #fafaf7;
+  --background: #f6f7f2;
   --surface: #ffffff;
-  --surface-muted: #f3f4ef;
-  --foreground: #1c2321;
-  --muted: #5d6762;
-  --border: #e1e4dc;
-  --border-strong: #c9cec3;
-  --brand-900: #143628;
-  --brand-800: #1b4532;
-  --brand-700: #23573f;
-  --brand-600: #2f6f50;
-  --brand-500: #3f8a64;
-  --brand-100: #e3efe7;
-  --brand-50: #f1f7f3;
-  --accent-600: #9a6a1c;
-  --accent-500: #b8862f;
-  --accent-100: #f6ecd8;
+  --surface-muted: #f1f3ec;
+  --foreground: #14211a;
+  --muted: #5b6760;
+  --border: #e3e7dd;
+  --border-strong: #cdd4c6;
+  --brand-950: #0a2e1d;
+  --brand-900: #0f4a2e;
+  --brand-800: #165d3b;
+  --brand-700: #1b6b43;
+  --brand-600: #2a8150;
+  --brand-500: #3e9b5f;
+  --brand-100: #e2f0e4;
+  --brand-50: #f0f7f1;
+  --accent-600: #4f7d1f;
+  --accent-500: #a7d572;
+  --accent-400: #bfe293;
+  --accent-100: #eef7df;
   --danger-600: #b42318;
-  --danger-100: #fde8e6;
-  --warning-600: #a15c07;
-  --warning-100: #fdf1dc;
+  --danger-100: #fdeceb;
+  --warning-600: #9a5b07;
+  --warning-100: #fdf3df;
   --info-600: #1f5f8b;
-  --info-100: #e2eef7;
-  --focus: #b8862f;
+  --info-100: #e5f0f8;
+  --focus: #3e9b5f;
+  --shadow-sm: 0 1px 2px rgb(15 74 46 / 0.05), 0 1px 1px rgb(15 74 46 / 0.03);
+  --shadow-md: 0 1px 2px rgb(15 74 46 / 0.04), 0 8px 24px -8px rgb(15 74 46 / 0.12);
+  --shadow-lg: 0 2px 4px rgb(15 74 46 / 0.05), 0 24px 48px -12px rgb(15 74 46 / 0.22);
 }
 
 @theme inline {
@@ -36,6 +41,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-brand-950: var(--brand-950);
   --color-brand-900: var(--brand-900);
   --color-brand-800: var(--brand-800);
   --color-brand-700: var(--brand-700);
@@ -45,6 +51,7 @@
   --color-brand-50: var(--brand-50);
   --color-accent-600: var(--accent-600);
   --color-accent-500: var(--accent-500);
+  --color-accent-400: var(--accent-400);
   --color-accent-100: var(--accent-100);
   --color-danger-600: var(--danger-600);
   --color-danger-100: var(--danger-100);
@@ -52,14 +59,30 @@
   --color-warning-100: var(--warning-100);
   --color-info-600: var(--info-600);
   --color-info-100: var(--info-100);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow-soft: var(--shadow-sm);
+  --shadow-card: var(--shadow-md);
+  --shadow-float: var(--shadow-lg);
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgb(167 213 114 / 0.14), transparent 60%),
+    radial-gradient(900px 420px at -10% 0%, rgb(62 155 95 / 0.08), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .tabular {
@@ -69,6 +92,82 @@ body {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(167 213 114 / 0.45);
+}
+
+/* área segura do celular (barra de navegação inferior) */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* ---------------------------------------------------------------------------
+   Animações da marca (tela de carregamento)
+--------------------------------------------------------------------------- */
+@keyframes bento-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.86) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes bento-leaf {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(-6deg) scale(1.04);
+  }
+}
+@keyframes bento-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+@keyframes bento-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bento-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+.animate-bento-pop {
+  animation: bento-pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.animate-bento-leaf .bm-leaf {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: bento-leaf 1.6s ease-in-out infinite;
+}
+.animate-bento-bar {
+  animation: bento-bar 1.2s ease-in-out infinite;
+}
+.animate-bento-fade {
+  animation: bento-fade 0.35s ease both;
+}
+.animate-bento-glow {
+  animation: bento-glow 2.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

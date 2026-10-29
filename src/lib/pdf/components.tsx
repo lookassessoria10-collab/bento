@@ -1,12 +1,12 @@
 import "server-only";
 import type { ReactNode } from "react";
-import { Document, Page, StyleSheet, Text, View, renderToBuffer, Svg, Rect } from "@react-pdf/renderer";
+import { ClipPath, Ellipse, Defs, Document, G, Page, Path, Rect, StyleSheet, Svg, Text, View, renderToBuffer } from "@react-pdf/renderer";
 
 export const C = {
-  brand: "#1b4532",
-  brand2: "#2f6f50",
-  light: "#e3efe7",
-  accent: "#b8862f",
+  brand: "#165D3B",
+  brand2: "#3E9B5F",
+  light: "#E2F0E4",
+  accent: "#A7D572",
   text: "#1c2321",
   muted: "#5d6762",
   border: "#d5dad0",
@@ -48,14 +48,26 @@ function fmtTs(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Bahia", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 }
 
-export function Mark({ size = 18 }: { size?: number }) {
+export function Mark({ size = 18, gap = "#ffffff" }: { size?: number; gap?: string }) {
+  // mesma marca vetorial da plataforma (B com folha e faixas de cultivo)
   return (
-    <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Rect x="2" y="2" width="28" height="28" rx="7" fill={C.brand} />
-      <Rect x="7" y="7" width="8" height="8" rx="2" fill={C.light} />
-      <Rect x="17" y="7" width="8" height="8" rx="2" fill={C.accent} />
-      <Rect x="7" y="17" width="18" height="3" rx="1.5" fill={C.light} />
-      <Rect x="7" y="22" width="12" height="3" rx="1.5" fill={C.light} />
+    <Svg width={size} height={size} viewBox="0 0 120 120">
+      <Defs>
+        <ClipPath id="pdf-b">
+          <Path d="M24 8H62V54H80C98 54 112 67 112 84C112 100 98 112 80 112H24C15 112 8 105 8 96V24C8 15 15 8 24 8Z" />
+        </ClipPath>
+      </Defs>
+      <G clipPath="url(#pdf-b)">
+        <Rect x="0" y="0" width="120" height="120" fill="#165D3B" />
+        <Ellipse cx="6" cy="120" rx="110" ry="70" fill="#A7D572" />
+        <Ellipse cx="6" cy="120" rx="86.9" ry="55.3" fill={gap} />
+        <Ellipse cx="6" cy="120" rx="84.15" ry="53.55" fill="#3E9B5F" />
+        <Ellipse cx="6" cy="120" rx="66" ry="42" fill={gap} />
+        <Ellipse cx="6" cy="120" rx="63.25" ry="40.25" fill="#2A7F4F" />
+        <Ellipse cx="6" cy="120" rx="47.3" ry="30.1" fill={gap} />
+        <Ellipse cx="6" cy="120" rx="44.55" ry="28.35" fill="#1D6B42" />
+      </G>
+      <Path d="M58 56C58 30 76 12 108 10C110 40 90 56 58 56Z" fill="#A7D572" stroke={gap} strokeWidth={4} />
     </Svg>
   );
 }

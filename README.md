@@ -52,6 +52,14 @@ tests/unit|integration|e2e
 docs/                  arquitetura, permissões, fluxos, deploy, segurança, operação, pendências reais
 ```
 
+## Identidade visual
+
+- Marca vetorial em `src/components/logo.tsx` (`BentoMark`, `Logo`), também em `public/brand/` (marca e ícone de app) e `src/app/icon.svg` (favicon).
+- Paleta: `#165D3B` (verde profundo), `#3E9B5F` (verde médio), `#A7D572` (verde-lima). Tokens em `src/app/globals.css`.
+- Tipografia: Outfit (títulos e números) e Plus Jakarta Sans (texto).
+- Navegação: menu lateral no desktop; barra inferior com “Mais” no celular e no tablet.
+- Tela de carregamento com a marca: `src/components/splash.tsx` (`app/loading.tsx` e `app/app/loading.tsx`).
+
 ## Documentação
 
 - [docs/arquitetura.md](docs/arquitetura.md) — modelo de dados (diagrama ER) e decisões

@@ -14,8 +14,8 @@ export function BarList({ data, caption, total }: { data: { label: string; value
               <span className="truncate">{d.label}</span>
               <span className="tabular text-muted">{d.value}</span>
             </div>
-            <div className="mt-1 h-2 rounded bg-surface-muted">
-              <div className="h-2 rounded bg-brand-500" style={{ width: `${(d.value / max) * 100}%` }} />
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div className="h-2 rounded-full bg-gradient-to-r from-brand-600 to-accent-500" style={{ width: `${(d.value / max) * 100}%` }} />
             </div>
           </li>
         ))}
@@ -54,10 +54,26 @@ export function BarList({ data, caption, total }: { data: { label: string; value
 
 export function Stat({ label, value, hint, tone = "default" }: { label: string; value: number | string; hint?: string; tone?: "default" | "warning" | "danger" }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-      <p className={cx("mt-1 text-2xl font-semibold tabular", tone === "warning" && "text-warning-600", tone === "danger" && "text-danger-600", tone === "default" && "text-brand-900")}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
+    <div className="group relative overflow-hidden rounded-2xl border border-border/80 bg-surface p-4 shadow-card transition-shadow hover:shadow-float sm:p-5">
+      <span
+        aria-hidden
+        className={cx(
+          "absolute inset-x-0 top-0 h-1",
+          tone === "warning" ? "bg-warning-600/70" : tone === "danger" ? "bg-danger-600/70" : "bg-gradient-to-r from-brand-600 to-accent-500",
+        )}
+      />
+      <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted">{label}</p>
+      <p
+        className={cx(
+          "mt-2 font-display text-[28px] font-semibold leading-none tabular",
+          tone === "warning" && "text-warning-600",
+          tone === "danger" && "text-danger-600",
+          tone === "default" && "text-brand-950",
+        )}
+      >
+        {value}
+      </p>
+      {hint && <p className="mt-2 text-xs leading-snug text-muted">{hint}</p>}
     </div>
   );
 }

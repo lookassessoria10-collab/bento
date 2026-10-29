@@ -4,6 +4,7 @@ import { portalState } from "@/lib/data/portal";
 import { fmtDate } from "@/lib/format";
 import { EDITORIAL_KIND_LABELS } from "@/lib/labels";
 import { PublicShell } from "@/components/public-shell";
+import { BentoMark } from "@/components/logo";
 import { Card, CardBody, EmptyState, LinkButton } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +21,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   if (!st.active) {
     return (
       <PublicShell>
-        <section className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-brand-900">Entomo Agro 360</h1>
-          <p className="mt-4 text-muted">
+        <section className="relative mx-auto max-w-2xl py-10 text-center animate-bento-pop">
+          <div aria-hidden className="absolute left-1/2 top-0 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-500/25 blur-3xl" />
+          <span className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[28px] bg-surface shadow-float ring-1 ring-border/70">
+            <BentoMark className="h-14 w-14" />
+          </span>
+          <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-brand-600">Em desenvolvimento</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-brand-950 sm:text-5xl">Entomo Agro 360</h1>
+          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
             Projeto acadêmico de acompanhamento de pesquisas agrícolas e divulgação científica, em desenvolvimento. O portal público será
             disponibilizado após o alinhamento e as autorizações institucionais.
           </p>
-          <LinkButton variant="primary" className="mt-6" href="/login">
+          <LinkButton variant="primary" size="lg" className="mt-8" href="/login">
             Acesso da equipe
           </LinkButton>
         </section>

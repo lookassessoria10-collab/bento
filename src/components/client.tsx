@@ -59,7 +59,6 @@ export function ActionForm({
     <form
       ref={formRef}
       id={id}
-      className={className}
       aria-busy={pending}
       onSubmit={(e) => {
         e.preventDefault();
@@ -79,7 +78,8 @@ export function ActionForm({
         });
       }}
     >
-      <fieldset disabled={pending} className="contents">
+      {/* o layout (grid, flex, space-y) fica no fieldset, que contém os campos de fato */}
+      <fieldset disabled={pending} className={cx("m-0 min-w-0 border-0 p-0", className)}>
         {children}
       </fieldset>
       {result && (

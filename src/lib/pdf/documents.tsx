@@ -72,7 +72,7 @@ export function BulletinPdf({ content, meta, images }: { content: SnapshotConten
       <Page size="A4" style={{ ...s.cover }}>
         <View style={{ backgroundColor: C.brand, height: "100%", padding: 56, justifyContent: "space-between" }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Mark size={36} />
+            <Mark size={36} gap={C.brand} />
             <Text style={{ color: "white", fontSize: 14 }}>Entomo Agro 360</Text>
           </View>
           <View>
