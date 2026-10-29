@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* Bento — tokens do design system (modo claro padrão) */
+:root {
+  --background: #fafaf7;
+  --surface: #ffffff;
+  --surface-muted: #f3f4ef;
+  --foreground: #1c2321;
+  --muted: #5d6762;
+  --border: #e1e4dc;
+  --border-strong: #c9cec3;
+  --brand-900: #143628;
+  --brand-800: #1b4532;
+  --brand-700: #23573f;
+  --brand-600: #2f6f50;
+  --brand-500: #3f8a64;
+  --brand-100: #e3efe7;
+  --brand-50: #f1f7f3;
+  --accent-600: #9a6a1c;
+  --accent-500: #b8862f;
+  --accent-100: #f6ecd8;
+  --danger-600: #b42318;
+  --danger-100: #fde8e6;
+  --warning-600: #a15c07;
+  --warning-100: #fdf1dc;
+  --info-600: #1f5f8b;
+  --info-100: #e2eef7;
+  --focus: #b8862f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-100: var(--brand-100);
+  --color-brand-50: var(--brand-50);
+  --color-accent-600: var(--accent-600);
+  --color-accent-500: var(--accent-500);
+  --color-accent-100: var(--accent-100);
+  --color-danger-600: var(--danger-600);
+  --color-danger-100: var(--danger-100);
+  --color-warning-600: var(--warning-600);
+  --color-warning-100: var(--warning-100);
+  --color-info-600: var(--info-600);
+  --color-info-100: var(--info-100);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
