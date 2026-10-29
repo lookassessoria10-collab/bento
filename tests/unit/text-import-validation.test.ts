@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { csvCell, safeFileName, slugify, suggestedFileName, toCsv, validateUpload } from "@/lib/text";
-import { parseDate, prepareImport, suggestMapping } from "@/lib/import";
+import { parseDate, parseTreatments, prepareImport, sameName, suggestMapping, templateHeaders } from "@/lib/import";
 import { experimentSchema, taskSchema } from "@/lib/validation";
 import { diffLines } from "@/lib/diff";
 import { fmtDate, localInputToIso, monthBoundsUtc } from "@/lib/format";
@@ -19,6 +19,14 @@ describe("exportação CSV", () => {
     const csv = toCsv([{ key: "a", label: "Coluna A" }], [{ a: ["x", "y"] }]);
     expect(csv.startsWith("\uFEFFColuna A")).toBe(true);
     expect(csv).toContain('"x; y"');
+    const two = toCsv(
+      [
+        { key: "a", label: "A" },
+        { key: "b", label: "B" },
+      ],
+      [{ a: 1, b: 2 }],
+    );
+    expect(two).toBe("﻿A;B\r\n1;2"); // separador ";" (Excel em português)
   });
 });
 
@@ -71,6 +79,30 @@ describe("importação", () => {
     expect(r.map((x) => x.status)).toEqual(["valida", "valida", "duplicada", "duplicada", "invalida", "invalida"]);
     expect(r[0].dados?.observacoes_escopo).toContain("Extra: valor X");
     expect(r[0].linha).toBe(2);
+  });
+});
+
+describe("modelo de planilha", () => {
+  it("cabeçalhos do modelo são reconhecidos automaticamente", () => {
+    const h = templateHeaders();
+    expect(h[0]).toBe("Título");
+    const m = suggestMapping(h);
+    expect(Object.keys(m)).toHaveLength(h.length);
+  });
+  it("fase, repetições, listas e tratamentos", () => {
+    const row = { Título: "Ensaio X", Fase: "Em andamento", "Número de repetições": "4", Organismos: "Chrysodeixis includens", Culturas: "Soja, Milho" };
+    const [r] = prepareImport([row], suggestMapping(Object.keys(row)), new Set());
+    expect(r.dados).toMatchObject({ fase: "andamento", num_repeticoes: 4, organismos: ["Chrysodeixis includens"], culturas: ["soja", "milho"] });
+    const bad = prepareImport([{ Título: "Ensaio Y", Fase: "Interrompido", "Número de repetições": "2,5" }], suggestMapping(["Título", "Fase", "Número de repetições"]), new Set());
+    expect(bad[0].status).toBe("invalida");
+    expect(bad[0].erros).toHaveLength(2);
+    expect(parseTreatments("T1: água; T2 - 150 mL/ha; sem código")).toEqual([
+      { codigo: "T1", descricao: "água" },
+      { codigo: "T2", descricao: "150 mL/ha" },
+      { codigo: null, descricao: "sem código" },
+    ]);
+    expect(sameName("Marco Antonio Tamai", "marco antônio  tamai")).toBe(true);
+    expect(parseDate("31/02/2026")).toBe("invalid");
   });
 });
 

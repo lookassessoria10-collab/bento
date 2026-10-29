@@ -45,4 +45,7 @@ Pautas com formato, texto do card, legenda (contador 2.200), CTA, hashtags, refe
 
 ## Importação
 
+Modelo oficial: botão **Modelo de planilha** em Experimentos (ou em Experimentos › Importar), rota `/app/experimentos/importar/modelo`. São 29 colunas na ordem de `src/lib/import.ts` (`IMPORT_FIELDS`), separador `;`. *Pesquisador principal* é vinculado pelo nome a uma pessoa já cadastrada (senão fica nas observações), e *Tratamentos* (separados por `;`, ex.: `T1: água; T2: 150 mL/ha`) viram registros de tratamento. Exemplo real convertido: `importacoes/experimento-azadiractina-chrysodeixis-includens.csv`.
+
+
 CSV/XLSX → mapeamento de colunas → validação no servidor → duplicatas **apenas por código institucional** → confirmação. Colunas sem campo equivalente são preservadas em observações. Lote registrado (arquivo, usuário, data, relatório linha a linha) e pode ser desfeito se não houver vínculos.

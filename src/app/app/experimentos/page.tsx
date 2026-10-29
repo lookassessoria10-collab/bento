@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, Plus, Upload } from "lucide-react";
 import { requireContext, has } from "@/lib/auth";
 import { fmtDateTime } from "@/lib/format";
 import { PHASE_LABELS, INFO_STATUS_LABELS } from "@/lib/labels";
@@ -25,6 +25,8 @@ import {
 } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Experimentos" };
+// download de arquivo (route handler): <a> simples, sem navegação do cliente
+const MODELO_HREF = "/app/experimentos/importar/modelo";
 const PAGE_SIZE = 20;
 
 export default async function ExperimentsPage({ searchParams }: PageProps<"/app/experimentos">) {
@@ -53,6 +55,9 @@ export default async function ExperimentsPage({ searchParams }: PageProps<"/app/
           <>
             <a className={buttonClass("secondary")} href={exportHref}>
               <Download aria-hidden className="h-4 w-4" /> Exportar CSV
+            </a>
+            <a className={buttonClass("secondary")} href={MODELO_HREF} title="Planilha com as colunas aceitas pela importação">
+              <FileSpreadsheet aria-hidden className="h-4 w-4" /> Modelo de planilha
             </a>
             {has(ctx, "experimentos.importar") && (
               <LinkButton href="/app/experimentos/importar">

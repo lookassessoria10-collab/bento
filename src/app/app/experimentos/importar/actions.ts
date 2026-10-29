@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth";
 import { assertOk, run, UserError, type ActionResult } from "@/lib/actions";
-import { prepareImport, type ImportRowResult } from "@/lib/import";
+import { prepareImport, sameName, type ImportRowResult } from "@/lib/import";
 import type { Json } from "@/lib/supabase/database.types";
 
 const input = z.object({
@@ -55,19 +55,48 @@ export async function runImport(payload: unknown): Promise<ActionResult> {
         .select("id")
         .single(),
     );
+    // pesquisador principal: vínculo somente com pessoa já cadastrada (nome igual, sem acento/maiúsculas)
+    const { data: people } = await ctx.supabase.from("people").select("id, nome").eq("organization_id", ctx.orgId);
     let ok = 0;
     for (const v of valid) {
-      const res = await ctx.supabase.from("experiments").insert({
-        ...(v.dados as { titulo: string }),
-        organization_id: ctx.orgId,
-        codigo: "",
-        codigo_seq: 0,
-        import_batch_id: batch.id,
-        fonte_cadastro: `Importação: ${p.arquivo}`,
-        disponibilidade: "pendente_conferencia",
-        data_informacao: new Date().toISOString().slice(0, 10),
-      });
-      if (!res.error) ok++;
+      const dados = { ...(v.dados as { titulo: string; fonte_cadastro?: string; data_informacao?: string; observacoes_escopo?: string }) };
+      let pesquisadorId: string | null = null;
+      if (v.pesquisador) {
+        pesquisadorId = (people ?? []).find((pp) => sameName(pp.nome, v.pesquisador!))?.id ?? null;
+        if (!pesquisadorId) {
+          const nota = `Pesquisador principal informado (não cadastrado em Pessoas): ${v.pesquisador}`;
+          dados.observacoes_escopo = dados.observacoes_escopo ? `${dados.observacoes_escopo}\n${nota}` : nota;
+        }
+      }
+      const res = await ctx.supabase
+        .from("experiments")
+        .insert({
+          ...dados,
+          organization_id: ctx.orgId,
+          codigo: "",
+          codigo_seq: 0,
+          import_batch_id: batch.id,
+          pesquisador_principal_id: pesquisadorId,
+          fonte_cadastro: dados.fonte_cadastro ?? `Importação: ${p.arquivo}`,
+          disponibilidade: "pendente_conferencia",
+          data_informacao: dados.data_informacao ?? new Date().toISOString().slice(0, 10),
+        })
+        .select("id")
+        .single();
+      if (res.error || !res.data) continue;
+      ok++;
+      if (v.tratamentos?.length) {
+        await ctx.supabase.from("experiment_treatments").insert(
+          v.tratamentos.map((t, ordem) => ({
+            organization_id: ctx.orgId,
+            experiment_id: res.data.id,
+            codigo: t.codigo,
+            descricao: t.descricao,
+            fonte: dados.fonte_cadastro ?? `Importação: ${p.arquivo}`,
+            ordem,
+          })),
+        );
+      }
     }
     revalidatePath("/app/experimentos");
     return {

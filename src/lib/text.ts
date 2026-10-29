@@ -10,8 +10,9 @@ export function csvCell(value: unknown): string {
 }
 
 export function toCsv(headers: { key: string; label: string }[], rows: Record<string, unknown>[]): string {
-  const head = headers.map((h) => csvCell(h.label)).join(",");
-  const body = rows.map((r) => headers.map((h) => csvCell(r[h.key])).join(","));
+  // separador ";" — abre em colunas no Excel em português; o importador detecta "," ou ";"
+  const head = headers.map((h) => csvCell(h.label)).join(";");
+  const body = rows.map((r) => headers.map((h) => csvCell(r[h.key])).join(";"));
   // BOM para abrir corretamente no Excel com acentuação
   return "﻿" + [head, ...body].join("\r\n");
 }
