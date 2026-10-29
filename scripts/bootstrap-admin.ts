@@ -24,12 +24,13 @@ let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 let secret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (ref) {
   if (!/^[a-z0-9]{20}$/.test(ref)) throw new Error("--project-ref inválido.");
-  const keys = JSON.parse(
-    execFileSync(process.platform === "win32" ? "node_modules\\.bin\\supabase.cmd" : "node_modules/.bin/supabase", ["projects", "api-keys", "--project-ref", ref, "-o", "json"], {
-      encoding: "utf8",
-      shell: process.platform === "win32",
-    }),
-  ) as { name: string; type?: string; api_key: string }[];
+  // --reveal: sem ele a CLI devolve a chave secreta truncada. O valor nunca é impresso.
+  const cliArgs = ["projects", "api-keys", "--project-ref", ref, "--reveal", "-o", "json"];
+  const out =
+    process.platform === "win32"
+      ? execFileSync("cmd.exe", ["/d", "/s", "/c", "node_modules\\.bin\\supabase.cmd", ...cliArgs], { encoding: "utf8" })
+      : execFileSync("node_modules/.bin/supabase", cliArgs, { encoding: "utf8" });
+  const keys = JSON.parse(out) as { name: string; type?: string; api_key: string }[];
   url = `https://${ref}.supabase.co`;
   secret = (keys.find((k) => k.type === "secret") ?? keys.find((k) => k.name === "service_role"))?.api_key;
 }
