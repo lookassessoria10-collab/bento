@@ -1,9 +1,10 @@
 /**
  * Cria (ou promove) o primeiro administrador da organização — uso único, por quem administra o Supabase.
- * Uso: npm run bootstrap:admin -- --email pessoa@instituicao.br --nome "Nome Completo"
+ * Uso: npm run bootstrap:admin -- --email pessoa@instituicao.br --nome "Nome Completo" [--project-ref <ref>]
  * A senha é gerada aleatoriamente e exibida UMA vez; a pessoa deve trocá-la em "Esqueci minha senha".
  */
 import { randomBytes } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,8 +18,21 @@ const arg = (k: string) => {
 const email = arg("email")?.toLowerCase();
 const nome = arg("nome") ?? "";
 const slug = arg("org") ?? "entomo-agro-360";
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const secret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Com --project-ref, as chaves são obtidas pela CLI já logada (supabase login), sem exibir a chave secreta.
+const ref = arg("project-ref");
+let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let secret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (ref) {
+  if (!/^[a-z0-9]{20}$/.test(ref)) throw new Error("--project-ref inválido.");
+  const keys = JSON.parse(
+    execFileSync(process.platform === "win32" ? "node_modules\\.bin\\supabase.cmd" : "node_modules/.bin/supabase", ["projects", "api-keys", "--project-ref", ref, "-o", "json"], {
+      encoding: "utf8",
+      shell: process.platform === "win32",
+    }),
+  ) as { name: string; type?: string; api_key: string }[];
+  url = `https://${ref}.supabase.co`;
+  secret = (keys.find((k) => k.type === "secret") ?? keys.find((k) => k.name === "service_role"))?.api_key;
+}
 
 async function main() {
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Informe --email válido.");
