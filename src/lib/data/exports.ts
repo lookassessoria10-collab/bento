@@ -27,6 +27,8 @@ export async function buildCsv(ctx: AppContext, tipo: string, p: { de: string; a
       { key: "organismos", label: "Organismos" },
       { key: "responsavel", label: "Pesquisador principal" },
       { key: "fazenda", label: "Fazenda" },
+      { key: "latitude", label: "Latitude" },
+      { key: "longitude", label: "Longitude" },
       { key: "fase", label: "Fase" },
       { key: "disponibilidade", label: "Disponibilidade das informações" },
       { key: "data_inicio", label: "Início" },

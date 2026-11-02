@@ -1,7 +1,7 @@
 // Regras puras da importação de experimentos (testáveis sem banco).
 // O modelo de planilha (cabeçalhos) é gerado a partir de IMPORT_FIELDS — a mesma lista usada no mapeamento.
 
-type Kind = "text" | "list" | "date" | "int" | "fase" | "pessoa" | "tratamentos";
+type Kind = "text" | "list" | "date" | "int" | "fase" | "pessoa" | "tratamentos" | "coord";
 
 export interface ImportField {
   key: string;
@@ -27,6 +27,8 @@ export const IMPORT_FIELDS: ImportField[] = [
   { key: "objetivos_especificos", label: "Objetivos específicos", kind: "text", hint: "" },
   { key: "_pesquisador", label: "Pesquisador principal", kind: "pessoa", hint: "Nome exatamente como cadastrado em Equipe › Pessoas. Se não existir, fica registrado nas observações." },
   { key: "local_descricao", label: "Local", kind: "text", hint: "Ex.: Laboratório, talhão, setor." },
+  { key: "latitude", label: "Latitude", kind: "coord", hint: "Graus decimais, ex.: -12.084100 (vírgula ou ponto)." },
+  { key: "longitude", label: "Longitude", kind: "coord", hint: "Graus decimais, ex.: -45.795300. Preencha junto com a latitude." },
   { key: "resumo_metodologico", label: "Resumo metodológico", kind: "text", hint: "" },
   { key: "protocolo_referencia", label: "Protocolo / referência", kind: "text", hint: "Documento ou arquivo de referência." },
   { key: "delineamento", label: "Delineamento", kind: "text", hint: "Ex.: Inteiramente casualizado (DIC)." },
@@ -170,6 +172,13 @@ export function prepareImport(rows: Record<string, unknown>[], mapping: Record<s
           else dados.fase = PHASES[k];
           break;
         }
+        case "coord": {
+          const n = Number(String(v).replace(",", "."));
+          const lim = field === "latitude" ? 90 : 180;
+          if (!Number.isFinite(n) || Math.abs(n) > lim) erros.push(`${def.label}: coordenada inválida (“${String(v)}”)`);
+          else dados[field] = Math.round(n * 1e6) / 1e6;
+          break;
+        }
         case "pessoa":
           pesquisador = String(v).slice(0, 200);
           break;
@@ -181,6 +190,7 @@ export function prepareImport(rows: Record<string, unknown>[], mapping: Record<s
       }
     }
     if (!dados.titulo || String(dados.titulo).length < 3) erros.push("Título ausente ou muito curto");
+    if ((dados.latitude == null) !== (dados.longitude == null)) erros.push("Informe latitude e longitude juntas");
     if (extras.length) dados.observacoes_escopo = `Dados importados sem campo equivalente — ${extras.join("; ")}`.slice(0, 4000);
     const code = dados.codigo_institucional ? String(dados.codigo_institucional).trim().toLowerCase() : null;
     let status: ImportRowResult["status"] = erros.length ? "invalida" : "valida";

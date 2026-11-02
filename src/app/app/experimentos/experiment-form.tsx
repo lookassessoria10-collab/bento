@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, Checkbox, Field, Input, Select, Textarea, o
 import type { ActionResult } from "@/lib/actions";
 import { ACCESS_LEVEL_LABELS, INFO_STATUS_LABELS, PHASE_LABELS } from "@/lib/labels";
 import type { Database } from "@/lib/supabase/database.types";
+import { CoordinatesField } from "./coordinates-field";
 
 type Experiment = Partial<Database["public"]["Tables"]["experiments"]["Row"]>;
 
@@ -96,7 +97,7 @@ export function ExperimentForm({
         </Field>
       </Section>
 
-      <Section title="Responsáveis e local" description="Coordenadas só são registradas na área física, quando disponibilizadas e autorizadas.">
+      <Section title="Responsáveis e local" description="Coordenadas são de uso interno: ajudam a equipe a encontrar o experimento em campo.">
         <Field label="Pesquisador principal" name="pesquisador_principal_id" hint="Cadastre pessoas em Equipe › Pessoas do projeto.">
           <Select name="pesquisador_principal_id" defaultValue={e.pesquisador_principal_id ?? ""} options={people} placeholder="Não informado" />
         </Field>
@@ -109,6 +110,7 @@ export function ExperimentForm({
         <Field label="Descrição do local" name="local_descricao">
           <Input name="local_descricao" defaultValue={e.local_descricao ?? ""} />
         </Field>
+        <CoordinatesField lat={e.latitude} lng={e.longitude} fonte={e.coordenadas_fonte} />
       </Section>
 
       <Section title="Metodologia e planejamento" description="Registre apenas o que foi fornecido pelo responsável.">

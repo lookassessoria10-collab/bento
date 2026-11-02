@@ -21,7 +21,7 @@ export function experimentFilters(sp: SP) {
 export type ExperimentFilters = ReturnType<typeof experimentFilters>;
 
 const LIST_COLUMNS =
-  "id, codigo, codigo_institucional, titulo, titulo_curto, area_tematica, culturas, organismos, fase, disponibilidade, nivel_acesso, acompanhamento_ativo, is_demo, archived_at, updated_at, data_inicio, data_termino_prevista, data_termino_efetiva, fonte_cadastro, data_informacao, people:people!experiments_pesquisador_principal_id_organization_id_fkey(nome), farms:farms!experiments_farm_id_organization_id_fkey(nome)";
+  "id, codigo, codigo_institucional, titulo, titulo_curto, area_tematica, culturas, organismos, fase, disponibilidade, nivel_acesso, acompanhamento_ativo, is_demo, archived_at, updated_at, data_inicio, data_termino_prevista, data_termino_efetiva, fonte_cadastro, data_informacao, latitude, longitude, people:people!experiments_pesquisador_principal_id_organization_id_fkey(nome), farms:farms!experiments_farm_id_organization_id_fkey(nome)";
 
 /** Consulta paginada no servidor; a RLS restringe aos experimentos visíveis ao usuário. */
 export function queryExperiments(ctx: AppContext, f: ExperimentFilters) {

@@ -29,6 +29,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <Link className="text-brand-700 hover:underline" href="/privacidade">
             Privacidade
           </Link>
+          {" · "}
+          <Link className="text-brand-700 hover:underline" href="/apresentacao">
+            Conheça o Bento
+          </Link>
         </>
       }
     >

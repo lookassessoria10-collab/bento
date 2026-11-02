@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, FileSpreadsheet, Plus, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, Map as MapIcon, MapPin, Plus, Upload } from "lucide-react";
 import { requireContext, has } from "@/lib/auth";
 import { fmtDateTime } from "@/lib/format";
 import { PHASE_LABELS, INFO_STATUS_LABELS } from "@/lib/labels";
@@ -53,6 +53,9 @@ export default async function ExperimentsPage({ searchParams }: PageProps<"/app/
         description="Pesquisas acompanhadas pelo projeto. A situação do experimento não indica aprovação para divulgação."
         actions={
           <>
+            <LinkButton href="/app/experimentos/mapa">
+              <MapIcon aria-hidden className="h-4 w-4" /> Mapa
+            </LinkButton>
             <a className={buttonClass("secondary")} href={exportHref}>
               <Download aria-hidden className="h-4 w-4" /> Exportar CSV
             </a>
@@ -167,6 +170,11 @@ export default async function ExperimentsPage({ searchParams }: PageProps<"/app/
                       {e.codigo}
                     </Link>
                     {e.codigo_institucional && <div className="text-muted">{e.codigo_institucional}</div>}
+                    {e.latitude != null && (
+                      <Link href={`/app/experimentos/mapa?id=${e.id}`} className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-brand-600 hover:underline" title="Ver no mapa">
+                        <MapPin aria-hidden className="h-3 w-3" /> mapa
+                      </Link>
+                    )}
                   </Td>
                   <Td>
                     <Link className="font-medium hover:underline" href={`/app/experimentos/${e.id}`}>

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Archive, Copy, FileDown, Pencil, Plus } from "lucide-react";
+import { Archive, Copy, FileDown, MapPin, Navigation, Pencil, Plus } from "lucide-react";
+import { directionsUrl, fmtCoord, mapsUrl } from "@/lib/geo";
 import { requireContext } from "@/lib/auth";
 import type { Database } from "@/lib/supabase/database.types";
 import { fmtDate, fmtDateTime } from "@/lib/format";
@@ -191,6 +192,24 @@ export default async function ExperimentPage({ params, searchParams }: PageProps
                   { label: "Fazenda", value: farm ? `${farm.nome}${farm.municipio ? ` (${farm.municipio}/${farm.uf})` : ""}` : null },
                   { label: "Área / talhão", value: area?.nome },
                   { label: "Local", value: e.local_descricao },
+                  {
+                    label: "Coordenadas",
+                    value:
+                      e.latitude != null && e.longitude != null ? (
+                        <span className="flex flex-col gap-1">
+                          <span className="tabular">{fmtCoord(Number(e.latitude), Number(e.longitude))}</span>
+                          <span className="flex flex-wrap gap-3 text-xs font-semibold">
+                            <a className="inline-flex items-center gap-1 text-brand-700 hover:underline" href={mapsUrl(Number(e.latitude), Number(e.longitude))} target="_blank" rel="noopener noreferrer">
+                              <MapPin aria-hidden className="h-3.5 w-3.5" /> Abrir no mapa
+                            </a>
+                            <a className="inline-flex items-center gap-1 text-brand-700 hover:underline" href={directionsUrl(Number(e.latitude), Number(e.longitude))} target="_blank" rel="noopener noreferrer">
+                              <Navigation aria-hidden className="h-3.5 w-3.5" /> Como chegar
+                            </a>
+                          </span>
+                          {e.coordenadas_fonte && <span className="text-xs text-muted">Origem: {e.coordenadas_fonte}</span>}
+                        </span>
+                      ) : null,
+                  },
                   { label: "Nível de acesso", value: ACCESS_LEVEL_LABELS[e.nivel_acesso] },
                   { label: "Seu acesso", value: access ? EXPERIMENT_ACCESS_LABELS[access] : "Pelo papel na organização" },
                 ]}

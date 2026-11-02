@@ -12,6 +12,39 @@ export const uuid = z.string().uuid("Identificador inválido.");
 export const optInt = (min = 0, max = 100000) =>
   z.preprocess((v) => (empty(v) === null ? null : Number(v)), z.number().int("Use número inteiro.").min(min).max(max).nullable());
 export const optUrl = z.preprocess(empty, z.string().trim().url("Informe um link válido (https://…).").max(1000).nullable());
+/** Coordenada decimal (aceita vírgula). Vazio = não informado. */
+export const optCoord = (min: number, max: number, nome: string) =>
+  z.preprocess(
+    (v) => (empty(v) === null ? null : Number(String(v).trim().replace(",", "."))),
+    z.number({ error: `${nome} inválida.` }).min(min, `${nome} fora do intervalo.`).max(max, `${nome} fora do intervalo.`).nullable(),
+  );
+
+/** Converte "-12.0841, -45.7953", links do Google Maps (@lat,lng) ou graus/min/seg em decimal. */
+export function parseCoordinates(input: string): { lat: number; lng: number } | null {
+  const s = input.trim();
+  const at = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/) ?? s.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+  if (at) return check(Number(at[1]), Number(at[2]));
+  const dms = [...s.matchAll(/(\d+(?:[.,]\d+)?)\s*°\s*(\d+(?:[.,]\d+)?)?\s*['′]?\s*(\d+(?:[.,]\d+)?)?\s*["″]?\s*([NSLOEW])/gi)];
+  if (dms.length === 2) {
+    const conv = (m: RegExpMatchArray) => {
+      const v = Number(m[1].replace(",", ".")) + Number((m[2] ?? "0").replace(",", ".")) / 60 + Number((m[3] ?? "0").replace(",", ".")) / 3600;
+      return /[SOW]/i.test(m[4]) ? -v : v;
+    };
+    const a = conv(dms[0]);
+    const b = conv(dms[1]);
+    return /[NS]/i.test(dms[0][4]) ? check(a, b) : check(b, a);
+  }
+  // "-12.0841, -45.7953" | "-12,0841; -45,7953" | "-12.0841 -45.7953"
+  const nums = s.match(/-?\d+(?:[.,]\d+)?/g);
+  if (nums && nums.length === 2 && /[;\s]|,\s/.test(s)) return check(Number(nums[0].replace(",", ".")), Number(nums[1].replace(",", ".")));
+  return null;
+  function check(lat: number, lng: number) {
+    return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat: round6(lat), lng: round6(lng) } : null;
+  }
+}
+
+const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
 export const bool = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
 export const list = z.preprocess(
   (v) =>
@@ -54,6 +87,9 @@ export const experimentSchema = z
     farm_id: optUuid,
     farm_area_id: optUuid,
     local_descricao: optText(1000),
+    latitude: optCoord(-90, 90, "Latitude"),
+    longitude: optCoord(-180, 180, "Longitude"),
+    coordenadas_fonte: optText(300),
     resumo_metodologico: optText(),
     protocolo_referencia: optText(1000),
     delineamento: optText(500),
@@ -72,6 +108,8 @@ export const experimentSchema = z
     acompanhamento_ativo: bool,
   })
   .superRefine((d, ctx) => {
+    if ((d.latitude == null) !== (d.longitude == null))
+      ctx.addIssue({ code: "custom", path: [d.latitude == null ? "latitude" : "longitude"], message: "Informe latitude e longitude juntas." });
     if (d.fase === "interrompido" && !d.motivo_interrupcao)
       ctx.addIssue({ code: "custom", path: ["motivo_interrupcao"], message: "Informe o motivo da interrupção." });
     if (d.data_inicio && d.data_termino_prevista && d.data_termino_prevista < d.data_inicio)

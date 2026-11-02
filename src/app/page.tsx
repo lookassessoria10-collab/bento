@@ -32,9 +32,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             Projeto acadêmico de acompanhamento de pesquisas agrícolas e divulgação científica, em desenvolvimento. O portal público será
             disponibilizado após o alinhamento e as autorizações institucionais.
           </p>
-          <LinkButton variant="primary" size="lg" className="mt-8" href="/login">
-            Acesso da equipe
-          </LinkButton>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <LinkButton variant="primary" size="lg" href="/login">
+              Acesso da equipe
+            </LinkButton>
+            <LinkButton size="lg" href="/apresentacao">
+              Conheça o Bento
+            </LinkButton>
+          </div>
         </section>
       </PublicShell>
     );
