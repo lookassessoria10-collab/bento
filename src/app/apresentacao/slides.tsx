@@ -1,101 +1,71 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  Archive,
   ArrowRight,
   BarChart3,
-  BadgeCheck,
-  Bell,
-  BookOpen,
   Building2,
   CalendarCheck,
-  Camera,
   CheckSquare,
   CircleCheck,
   ClipboardCheck,
-  Clock,
-  Crosshair,
-  Database,
-  Download,
-  Eye,
-  EyeOff,
-  FileCheck2,
-  FileLock2,
   FileSpreadsheet,
   FileText,
-  Fingerprint,
   FlaskConical,
   FolderOpen,
-  Globe,
   GraduationCap,
-  Hash,
   History,
-  KeyRound,
   LayoutDashboard,
-  Layers,
-  Lightbulb,
-  ListChecks,
-  Lock,
-  Mail,
-  MapPin,
-  Megaphone,
+  LogIn,
   Microscope,
-  Navigation,
-  Newspaper,
-  PenLine,
-  Quote,
-  Repeat,
-  Route,
-  Scale,
   Search,
-  Send,
-  Settings,
-  ShieldCheck,
-  Smartphone,
   Sprout,
   Stamp,
-  Target,
-  Timer,
-  Upload,
   UserCheck,
   Users,
-  WifiOff,
 } from "lucide-react";
 import { BentoMark } from "@/components/logo";
 import { cx } from "@/components/ui";
+import { CONTATO_COMERCIAL, linkComercial } from "./contato";
 
-// ---------------------------------------------------------------------------
-// Estrutura
-// ---------------------------------------------------------------------------
-export interface Chapter {
-  n: number;
-  title: string;
-  subtitle: string;
-  icon: typeof Sprout;
-}
-
-export const CHAPTERS: Chapter[] = [
-  { n: 1, title: "O Bento", subtitle: "Contexto e propósito", icon: Sprout },
-  { n: 2, title: "Pessoas & princípios", subtitle: "Quem usa e como se registra", icon: Users },
-  { n: 3, title: "Do campo ao registro", subtitle: "Experimentos, visitas e rotina", icon: FlaskConical },
-  { n: 4, title: "Dados & evidências", subtitle: "Resultados e biblioteca", icon: Microscope },
-  { n: 5, title: "Revisão & publicação", subtitle: "Do texto validado ao público", icon: ClipboardCheck },
-  { n: 6, title: "Gestão do piloto", subtitle: "Indicadores, linha do tempo e equipe", icon: BarChart3 },
-  { n: 7, title: "Confiança & segurança", subtitle: "Proteção, privacidade e campo", icon: ShieldCheck },
-  { n: 8, title: "Começando", subtitle: "Primeiros passos e rotina", icon: Route },
-];
+// Apresentação comercial do Bento: 10 lâminas, ~8 minutos.
+// Todas as telas abaixo são reproduções da interface real com dados FICTÍCIOS (nenhum dado do banco).
 
 export interface SlideDef {
   id: string;
-  ch: number; // 0 = abertura
   title: string;
-  keywords: string;
   tone: "dark" | "light" | "lime";
   render: () => ReactNode;
 }
 
+type Icon = typeof Sprout;
+
 // ---------------------------------------------------------------------------
-// Peças reutilizáveis
+// Dados demonstrativos (fictícios) usados em todas as maquetes
+// ---------------------------------------------------------------------------
+const DEMO = {
+  experimentos: 24,
+  ativos: 18,
+  taxa: { pct: 83, num: 15, den: 18 },
+  visitas: { previstas: 6, realizadas: 9, adiadas: 1 },
+  pendencias: { abertas: 7, vencidas: 2 },
+  fases: [
+    ["Em implantação", 4],
+    ["Em andamento", 14],
+    ["Concluído", 5],
+    ["Interrompido", 1],
+  ] as [string, number][],
+  revisao: [
+    ["Em conferência interna", 3],
+    ["Aguardando validação científica", 2],
+    ["Aguardando revisão final", 1],
+    ["Liberados, a publicar", 2],
+  ] as [string, number][],
+};
+
+// ---------------------------------------------------------------------------
+// Peças de composição
 // ---------------------------------------------------------------------------
 function Arcs({ className, color = "#A7D572", opacity = 0.18 }: { className?: string; color?: string; opacity?: number }) {
   return (
@@ -107,47 +77,21 @@ function Arcs({ className, color = "#A7D572", opacity = 0.18 }: { className?: st
   );
 }
 
-function Head({ k, t, lead }: { k: string; t: ReactNode; lead?: ReactNode }) {
+function Head({ k, t, lead, className }: { k?: string; t: ReactNode; lead?: ReactNode; className?: string }) {
   return (
-    <div className="s-stack rise">
-      <p className="s-kicker">{k}</p>
+    <div className={cx("s-stack rise", className)}>
+      {k && <p className="s-kicker">{k}</p>}
       <h2 className="s-title">{t}</h2>
       {lead && <p className="s-lead">{lead}</p>}
     </div>
   );
 }
 
-function Points({ items }: { items: { i: typeof Sprout; t: ReactNode; d?: ReactNode }[] }) {
-  return (
-    <ul className="s-stack rise" style={{ gap: "clamp(8px,1.2cqw,16px)" }}>
-      {items.map((p, idx) => (
-        <li key={idx} className="flex items-start gap-[1.1cqw]">
-          <span className="s-icon">
-            <p.i aria-hidden />
-          </span>
-          <span className="s-body">
-            <strong className="font-semibold">{p.t}</strong>
-            {p.d && <span className="block opacity-75">{p.d}</span>}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
+function DemoBadge({ children = "Dados fictícios" }: { children?: ReactNode }) {
+  return <span className="s-badge">{children}</span>;
 }
 
-function Card({ i: I, t, d, className }: { i: typeof Sprout; t: ReactNode; d?: ReactNode; className?: string }) {
-  return (
-    <div className={cx("s-card rise", className)}>
-      <span className="s-icon">
-        <I aria-hidden />
-      </span>
-      <p className="s-body mt-[0.9cqw] font-semibold">{t}</p>
-      {d && <p className="s-small mt-[0.3cqw] opacity-75">{d}</p>}
-    </div>
-  );
-}
-
-const CHIP: Record<string, string> = {
+const CHIP = {
   green: "bg-[#e2f0e4] text-[#165d3b]",
   lime: "bg-[#eef7df] text-[#4f7d1f]",
   amber: "bg-[#fdf3df] text-[#9a5b07]",
@@ -160,68 +104,214 @@ function Chip({ c = "green", children }: { c?: keyof typeof CHIP; children: Reac
   return <span className={cx("mock-chip", CHIP[c])}>{children}</span>;
 }
 
-function Flow({ steps, dark = true }: { steps: { i: typeof Sprout; t: string; d?: string }[]; dark?: boolean }) {
+const SIDE: [Icon, string][] = [
+  [LayoutDashboard, "Visão geral"],
+  [FlaskConical, "Experimentos"],
+  [CalendarCheck, "Visitas"],
+  [CheckSquare, "Atividades"],
+  [Sprout, "Resultados"],
+  [FolderOpen, "Biblioteca"],
+  [ClipboardCheck, "Aprovações"],
+  [BarChart3, "Relatórios"],
+];
+
+/** Moldura de janela da plataforma (barra superior + menu lateral real). */
+function Window({ path, active, children, className, side = true }: { path: string; active: string; children: ReactNode; className?: string; side?: boolean }) {
   return (
-    <ol className="rise grid gap-[1cqw]" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0,1fr))` }}>
-      {steps.map((s, idx) => (
-        <li key={s.t} className="relative flex flex-col items-center text-center">
-          <span
-            className={cx(
-              "relative z-10 flex h-[clamp(34px,4.4cqw,62px)] w-[clamp(34px,4.4cqw,62px)] items-center justify-center rounded-full",
-              dark ? "bg-[#a7d572] text-[#0a2e1d]" : "bg-[#165d3b] text-[#a7d572]",
-            )}
-          >
-            <s.i aria-hidden className="h-1/2 w-1/2" />
-          </span>
-          {idx < steps.length - 1 && (
-            <span aria-hidden className={cx("absolute left-1/2 top-[clamp(17px,2.2cqw,31px)] h-[2px] w-full", dark ? "bg-white/25" : "bg-[#165d3b]/25")} />
-          )}
-          <span className="s-small mt-[0.8cqw] font-bold">{s.t}</span>
-          {s.d && <span className="s-small opacity-70">{s.d}</span>}
-        </li>
+    <div className={cx("win rise", className)}>
+      <div className="win-bar" aria-hidden>
+        <span className="win-dots">
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="win-url">{path}</span>
+      </div>
+      <div className={cx("win-body", side && "has-side")}>
+        {side && (
+          <nav className="win-side" aria-hidden>
+            <span className="mb-[0.8em] flex items-center gap-[0.5em] px-[0.5em] font-display text-[1.15em] font-bold text-[#0f4a2e]">
+              <BentoMark className="h-[1.6em] w-[1.6em]" /> Bento
+            </span>
+            {SIDE.map(([I, l]) => (
+              <span key={l} className={cx("win-nav", l === active && "on")}>
+                <I aria-hidden className="h-[1.2em] w-[1.2em] shrink-0" />
+                {l}
+              </span>
+            ))}
+          </nav>
+        )}
+        <div className="win-main">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: "warn" | "danger" }) {
+  return (
+    <div className="mock-stat">
+      <p className="text-[0.72em] font-bold uppercase tracking-wide text-[#5b6760]">{label}</p>
+      <p className={cx("font-display text-[1.9em] font-semibold leading-tight tabular-nums", tone === "danger" ? "text-[#b42318]" : "text-[#14211a]")}>{value}</p>
+      {hint && <p className="text-[0.72em] text-[#5b6760]">{hint}</p>}
+    </div>
+  );
+}
+
+function Bars({ data, max }: { data: [string, number][]; max: number }) {
+  return (
+    <div className="space-y-[0.55em]">
+      {data.map(([l, n]) => (
+        <div key={l}>
+          <div className="flex justify-between text-[0.85em]">
+            <span>{l}</span>
+            <span className="tabular-nums text-[#5b6760]">{n}</span>
+          </div>
+          <div className="mt-[0.2em] h-[0.45em] rounded-full bg-[#f1f3ec]">
+            <div className="bar-fill h-full rounded-full bg-gradient-to-r from-[#2a8150] to-[#a7d572]" style={{ width: `${(n / max) * 100}%` }} />
+          </div>
+        </div>
       ))}
-    </ol>
+    </div>
+  );
+}
+
+function Field({ l, children, className }: { l: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-[0.7em] font-bold uppercase tracking-wide text-[#5b6760]">{l}</p>
+      <div className="mt-[0.15em]">{children}</div>
+    </div>
+  );
+}
+
+function Photo({ hue }: { hue: number }) {
+  return (
+    <span
+      aria-hidden
+      className="block aspect-[4/3] rounded-[0.5em]"
+      style={{ background: `linear-gradient(135deg, hsl(${hue} 45% 62%), hsl(${hue + 20} 50% 32%))` }}
+    />
   );
 }
 
 // ---------------------------------------------------------------------------
-// Maquetes de interface
+// Chamadas para ação (sem contato inventado: sem link enquanto não configurado)
 // ---------------------------------------------------------------------------
-function MockPanel() {
+function Cta({ href, variant, children }: { href: string | null; variant: "primary" | "secondary" | "dark"; children: ReactNode }) {
+  const cls = cx("s-cta", `s-cta-${variant}`);
+  const content = (
+    <>
+      {children} <ArrowRight aria-hidden className="h-[1.1em] w-[1.1em]" />
+    </>
+  );
+  if (!href) return <span className={cls}>{content}</span>;
+  const external = href.startsWith("https://");
   return (
-    <div className="mock rise">
-      <div className="mb-[1cqw] flex items-center justify-between">
-        <span className="font-display text-[1.25em] font-semibold">Olá, Coordenação</span>
-        <Chip c="dark">mês 3 de 6</Chip>
+    <a href={href} className={cls} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+      {content}
+    </a>
+  );
+}
+
+function CtaNote({ className }: { className?: string }) {
+  const configured = linkComercial(CONTATO_COMERCIAL.demonstracao) || linkComercial(CONTATO_COMERCIAL.piloto);
+  const who = CONTATO_COMERCIAL.responsavel?.trim();
+  if (configured && !who) return null;
+  return <p className={cx("s-small opacity-75", className)}>{who ? who : "Fale com quem apresentou o Bento para combinar a data da demonstração."}</p>;
+}
+
+// ---------------------------------------------------------------------------
+// 1 · Capa
+// ---------------------------------------------------------------------------
+function DashboardMock() {
+  const maxF = Math.max(...DEMO.fases.map(([, n]) => n));
+  return (
+    <Window path="bento · Visão geral" active="Visão geral" className="cover-win">
+      <div className="flex items-start justify-between gap-[0.6em]">
+        <div>
+          <p className="font-display text-[1.35em] font-semibold leading-tight">Olá, Coordenação</p>
+          <p className="text-[0.75em] text-[#5b6760]">Instituição demonstrativa · indicadores de 01/11 a 30/11</p>
+        </div>
+        <DemoBadge />
       </div>
-      <div className="grid grid-cols-3 gap-[0.8cqw]">
-        {[
-          ["Experimentos", "12", "9 ativos"],
-          ["Registros devidos", "83%", "10 de 12"],
-          ["Pendências", "4", "1 vencida"],
-        ].map(([l, v, h]) => (
-          <div key={l} className="relative overflow-hidden rounded-[0.9cqw] border border-[#e3e7dd] p-[0.8cqw]">
-            <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#2a8150] to-[#a7d572]" />
-            <p className="text-[0.75em] font-bold uppercase tracking-wide text-[#5b6760]">{l}</p>
-            <p className="font-display text-[1.9em] font-semibold leading-tight">{v}</p>
-            <p className="text-[0.75em] text-[#5b6760]">{h}</p>
-          </div>
-        ))}
+      <div className="mt-[0.9em] grid grid-cols-2 gap-[0.6em] @[760px]:grid-cols-4">
+        <Stat label="Experimentos" value={DEMO.experimentos} hint={`${DEMO.ativos} em acompanhamento ativo`} />
+        <Stat label="Registros devidos — novembro" value={`${DEMO.taxa.pct}%`} hint={`${DEMO.taxa.num} de ${DEMO.taxa.den} elegíveis`} />
+        <Stat label="Visitas previstas" value={DEMO.visitas.previstas} hint={`${DEMO.visitas.realizadas} realizadas`} />
+        <Stat label="Pendências abertas" value={DEMO.pendencias.abertas} hint={`${DEMO.pendencias.vencidas} vencidas`} />
       </div>
-      <div className="mt-[1cqw] space-y-[0.6cqw]">
-        {[
-          ["Em andamento", 80],
-          ["Em implantação", 45],
-          ["Concluído", 20],
-        ].map(([l, w]) => (
-          <div key={l as string}>
-            <div className="flex justify-between text-[0.85em]">
-              <span>{l}</span>
-              <span className="text-[#5b6760]">{Math.round((w as number) / 10)}</span>
+      <div className="mt-[0.9em] grid gap-[0.7em] @[760px]:grid-cols-[1.2fr_1fr]">
+        <div className="mock-card">
+          <p className="mb-[0.6em] text-[0.9em] font-semibold">Por fase do experimento</p>
+          <Bars data={DEMO.fases} max={maxF} />
+        </div>
+        <div className="mock-card">
+          <p className="mb-[0.6em] text-[0.9em] font-semibold">Agenda</p>
+          {[
+            ["Visita mensal · área 2", "18/11 · 08:00 · Confirmada"],
+            ["Avaliação de desfolha", "21/11 · 07:30 · Planejada"],
+          ].map(([t, d], i) => (
+            <div key={t} className={cx("mb-[0.45em] rounded-[0.5em] border p-[0.5em]", i === 0 ? "border-[#a7d572]" : "border-[#e3e7dd]")}>
+              <p className="text-[0.85em] font-semibold">{t}</p>
+              <p className="text-[0.72em] text-[#5b6760]">{d}</p>
             </div>
-            <div className="mt-[0.2cqw] h-[0.5cqw] min-h-[4px] rounded-full bg-[#f1f3ec]">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#2a8150] to-[#a7d572]" style={{ width: `${w}%` }} />
-            </div>
+          ))}
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+function Cover() {
+  return (
+    <div className="cover h-full">
+      <Arcs className="-bottom-[16cqw] -left-[14cqw] h-[56cqw] w-[56cqw]" opacity={0.14} />
+      <div className="cover-copy">
+        <div className="rise flex items-center gap-[1.1cqw]">
+          <BentoMark className="h-[4.2cqw] min-h-10 w-[4.2cqw] min-w-10" gap="#0f4a2e" />
+          <span className="font-display text-[clamp(26px,3.4cqw,48px)] font-bold tracking-tight">Bento</span>
+        </div>
+        <h1 className="s-hero rise">
+          Gestão de pesquisas e experimentos <em>em um só lugar.</em>
+        </h1>
+        <p className="s-lead rise">Organize estudos, acompanhe atividades e mantenha as informações da sua equipe centralizadas.</p>
+      </div>
+      <DashboardMock />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 2 · O problema
+// ---------------------------------------------------------------------------
+const SCATTER: { i: Icon; t: string; tag: string; x: string; y: string; r: string }[] = [
+  { i: FileSpreadsheet, t: "Planilhas e documentos dispersos", tag: "ensaio_v3_FINAL (2).xlsx", x: "2%", y: "4%", r: "-4deg" },
+  { i: Search, t: "Dificuldade para acompanhar o andamento dos estudos", tag: "“Em que fase está o ensaio 7?”", x: "48%", y: "0%", r: "3deg" },
+  { i: Users, t: "Informações que dependem de diferentes responsáveis", tag: "“Só o responsável sabe.”", x: "6%", y: "52%", r: "2.5deg" },
+  { i: History, t: "Tempo gasto procurando registros e atualizações", tag: "“Qual é a versão mais recente?”", x: "50%", y: "50%", r: "-3deg" },
+];
+
+function Problem() {
+  return (
+    <div className="s-grid2 problem h-full">
+      <div className="s-stack">
+        <Head k="O problema" t={<>Suas pesquisas estão organizadas ou <em>espalhadas</em> em diferentes lugares?</>} />
+        <p className="s-quote rise">Quanto mais pesquisas uma instituição acompanha, maior a necessidade de organizar essas informações.</p>
+      </div>
+      <div className="scatter rise">
+        <svg aria-hidden viewBox="0 0 100 100" preserveAspectRatio="none" className="scatter-lines">
+          <path d="M22 26 C 40 40, 55 20, 72 24" />
+          <path d="M26 74 C 42 60, 58 82, 74 74" />
+          <path d="M20 30 C 14 50, 30 56, 24 70" />
+          <path d="M76 30 C 88 44, 70 58, 78 70" />
+        </svg>
+        {SCATTER.map((s) => (
+          <div key={s.t} className="scatter-card" style={{ ["--x" as string]: s.x, ["--y" as string]: s.y, ["--r" as string]: s.r }}>
+            <span className="s-icon">
+              <s.i aria-hidden />
+            </span>
+            <p className="s-body mt-[0.7cqw] font-semibold leading-snug">{s.t}</p>
+            <p className="mt-[0.6cqw] truncate font-mono text-[clamp(10px,0.9cqw,13px)] text-[#5b6760]">{s.tag}</p>
           </div>
         ))}
       </div>
@@ -229,1181 +319,617 @@ function MockPanel() {
   );
 }
 
-function MockExperiment() {
+// ---------------------------------------------------------------------------
+// 3 · A solução
+// ---------------------------------------------------------------------------
+const HUB: { i: Icon; t: string }[] = [
+  { i: FlaskConical, t: "Experimentos e projetos" },
+  { i: Users, t: "Equipes e responsáveis" },
+  { i: CalendarCheck, t: "Visitas e atividades" },
+  { i: FolderOpen, t: "Documentos e registros" },
+  { i: ClipboardCheck, t: "Revisões e aprovações" },
+];
+const R = 36;
+const HUB_POS = HUB.map((_, k) => {
+  const a = ((-90 + k * 72) * Math.PI) / 180;
+  return { x: +(50 + R * Math.cos(a)).toFixed(2), y: +(50 + R * Math.sin(a)).toFixed(2) };
+});
+
+function Solution() {
   return (
-    <div className="mock rise">
-      <div className="flex items-center gap-[0.8cqw]">
-        <span className="font-mono text-[1.05em] font-bold text-[#2a8150]">EA360-014</span>
-        <Chip c="green">Em andamento</Chip>
-        <Chip c="blue">Fornecido</Chip>
+    <div className="s-grid2 h-full">
+      <Head
+        k="A solução"
+        t={<>Tudo o que sua equipe precisa acompanhar, em um <em>único ambiente</em>.</>}
+        lead="O Bento conecta pesquisas, pessoas e registros. Cada informação fica ligada ao estudo a que pertence."
+      />
+      <div className="hub rise">
+        <svg aria-hidden viewBox="0 0 100 100" className="hub-lines">
+          <circle cx="50" cy="50" r={R} />
+          {HUB_POS.map((p, k) => (
+            <line key={k} x1="50" y1="50" x2={p.x} y2={p.y} />
+          ))}
+        </svg>
+        <div className="hub-core">
+          <BentoMark className="h-[62%] w-[62%]" />
+        </div>
+        <ul className="hub-nodes">
+          {HUB.map((h, k) => (
+            <li key={h.t} className="hub-node" style={{ ["--x" as string]: `${HUB_POS[k].x}%`, ["--y" as string]: `${HUB_POS[k].y}%` }}>
+              <h.i aria-hidden className="h-[1.25em] w-[1.25em] shrink-0 text-[#a7d572]" />
+              <span>{h.t}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <p className="mt-[0.5cqw] font-display text-[1.35em] font-semibold leading-snug">Ensaio ilustrativo · manejo de lagartas em soja</p>
-      <div className="mt-[0.8cqw] flex flex-wrap gap-[0.4cqw]">
-        {["Resumo", "Metodologia", "Linha do tempo", "Visitas", "Resultados", "Arquivos", "Pendências", "Conteúdos", "Histórico"].map((t, i) => (
-          <span key={t} className={cx("rounded-[0.6cqw] px-[0.6cqw] py-[0.2cqw] text-[0.8em] font-semibold", i === 0 ? "bg-[#165d3b] text-white" : "bg-[#f1f3ec] text-[#5b6760]")}>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 4 · Gestão de experimentos
+// ---------------------------------------------------------------------------
+const TABS = ["Resumo", "Metodologia", "Linha do tempo", "Visitas", "Resultados", "Arquivos", "Pendências", "Histórico"];
+
+function ExperimentMock() {
+  return (
+    <Window path="bento · Experimentos › EA360-014" active="Experimentos" side={false}>
+      <div className="flex flex-wrap items-center gap-[0.5em]">
+        <span className="font-mono text-[1em] font-bold text-[#2a8150]">EA360-014</span>
+        <Chip c="green">Em andamento</Chip>
+        <span className="ml-auto">
+          <DemoBadge />
+        </span>
+      </div>
+      <p className="mt-[0.35em] font-display text-[1.3em] font-semibold leading-snug">Ensaio demonstrativo · manejo de lagartas em soja</p>
+      <div className="mt-[0.6em] flex flex-wrap gap-[0.3em]">
+        {TABS.map((t, i) => (
+          <span key={t} className={cx("rounded-[0.45em] px-[0.55em] py-[0.15em] text-[0.78em] font-semibold", i === 0 ? "bg-[#165d3b] text-white" : "bg-[#f1f3ec] text-[#5b6760]")}>
             {t}
           </span>
         ))}
       </div>
-      <div className="mt-[1cqw] grid grid-cols-2 gap-[0.8cqw] text-[0.85em]">
+      <div className="mt-[0.8em] grid gap-[0.7em] @[760px]:grid-cols-2">
+        <div className="mock-card grid grid-cols-2 gap-[0.6em] text-[0.88em]">
+          <Field l="Cultura">Soja</Field>
+          <Field l="Fase">Em andamento</Field>
+          <Field l="Responsável">Pesquisador(a) responsável</Field>
+          <Field l="Local">Área experimental 2</Field>
+          <Field l="Delineamento" className="col-span-2">
+            DBC · 4 tratamentos · 5 repetições
+          </Field>
+        </div>
+        <div className="mock-card text-[0.88em]">
+          <p className="mb-[0.45em] font-semibold">Próximas atividades</p>
+          {[
+            ["21/11", "Avaliação de desfolha", "Planejada"],
+            ["28/11", "Visita mensal de acompanhamento", "Planejada"],
+          ].map(([d, t, s]) => (
+            <p key={t} className="flex items-center gap-[0.5em] border-b border-[#eef0ea] py-[0.35em] last:border-0">
+              <span className="w-[3.2em] shrink-0 font-mono text-[0.85em] text-[#2a8150]">{d}</span>
+              <span className="flex-1">{t}</span>
+              <Chip c="gray">{s}</Chip>
+            </p>
+          ))}
+          <p className="mb-[0.3em] mt-[0.7em] font-semibold">Histórico</p>
+          {["12/11 · Ficha de visita conferida", "03/11 · Fase alterada para Em andamento"].map((t) => (
+            <p key={t} className="flex items-center gap-[0.45em] text-[0.9em] text-[#5b6760]">
+              <History aria-hidden className="h-[1.1em] w-[1.1em] shrink-0" /> {t}
+            </p>
+          ))}
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+function Checks({ items, dark }: { items: [string, string][]; dark?: boolean }) {
+  return (
+    <ul className="rise space-y-[clamp(6px,0.9cqw,12px)]">
+      {items.map(([t, d]) => (
+        <li key={t} className="flex items-start gap-[0.9cqw]">
+          <CircleCheck aria-hidden className={cx("mt-[0.2em] h-[1.25em] w-[1.25em] shrink-0 s-body", dark ? "text-[#a7d572]" : "text-[#2a8150]")} />
+          <span className="s-body">
+            <strong className="font-semibold">{t}</strong> <span className="opacity-70">· {d}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Experiments() {
+  return (
+    <div className="s-grid2 h-full">
+      <div className="s-stack">
+        <Head k="Gestão de experimentos" t={<>Saiba o que está acontecendo em <em>cada pesquisa</em>.</>} lead="Acompanhe estudos, responsáveis, etapas e atualizações sem depender de consultas a diferentes arquivos." />
+        <Checks
+          items={[
+            ["Cadastro dos estudos", "código único, cultura, local e metodologia"],
+            ["Fase atual", "em implantação, em andamento ou concluído"],
+            ["Responsáveis", "pesquisador e participantes de cada estudo"],
+            ["Histórico de atualizações", "o que mudou e quando"],
+            ["Próximas atividades", "etapas, avaliações e visitas previstas"],
+          ]}
+        />
+      </div>
+      <ExperimentMock />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 5 · Acompanhamento de campo
+// ---------------------------------------------------------------------------
+function FieldRecordMock() {
+  return (
+    <div className="mock field-rec rise">
+      <div className="flex flex-wrap items-center gap-[0.5em]">
+        <span className="font-display text-[1.2em] font-semibold">Visita de novembro</span>
+        <Chip c="green">Realizada</Chip>
+        <span className="ml-auto">
+          <DemoBadge />
+        </span>
+      </div>
+      <p className="mt-[0.2em] text-[0.8em] text-[#5b6760]">12/11/2026 · 08:30 · Responsável: equipe de campo (Estudante 1)</p>
+
+      <div className="mt-[0.7em] flex items-center justify-between rounded-[0.6em] bg-[#f6f7f2] px-[0.7em] py-[0.45em]">
+        <span className="text-[0.9em]">
+          Ficha · <span className="font-mono font-bold text-[#2a8150]">EA360-014</span>
+        </span>
+        <Chip c="blue">Conferida</Chip>
+      </div>
+
+      <div className="mt-[0.7em] grid gap-[0.65em] text-[0.86em] @[760px]:grid-cols-2">
+        <Field l="Atividades realizadas">Aplicação dos tratamentos concluída; parcelas sinalizadas.</Field>
+        <Field l="Ocorrências relatadas">
+          Lagartas nas parcelas 3 e 4.
+          <span className="block text-[0.85em] text-[#5b6760]">Informou: pesquisador(a) responsável</span>
+        </Field>
+        <Field l="Observações diretas da equipe">Desfolha visível na bordadura do bloco 2.</Field>
+        <Field l="Fotografias e documentos">
+          <span className="mt-[0.2em] grid grid-cols-4 gap-[0.35em]">
+            <Photo hue={95} />
+            <Photo hue={80} />
+            <Photo hue={110} />
+            <span className="flex aspect-[4/3] flex-col items-center justify-center rounded-[0.5em] border border-[#e3e7dd] text-[0.75em] text-[#5b6760]">
+              <FileText aria-hidden className="h-[1.3em] w-[1.3em]" /> PDF
+            </span>
+          </span>
+        </Field>
+      </div>
+
+      <div className="mt-[0.75em] flex flex-wrap items-center gap-[0.5em] rounded-[0.6em] border border-[#9a5b07]/25 bg-[#fdf3df]/70 px-[0.7em] py-[0.5em] text-[0.86em]">
+        <strong className="font-semibold">Próxima ação:</strong> Avaliação de desfolha
+        <span className="text-[#5b6760]">· Resp.: Estudante 2 · prazo 21/11</span>
+      </div>
+    </div>
+  );
+}
+
+function VisitTrail() {
+  const rows: [string, string, string, boolean][] = [
+    ["12 nov", "Visita de novembro", "Ficha conferida", true],
+    ["15 out", "Visita de outubro", "Ficha finalizada", false],
+    ["18 set", "Visita de setembro", "Ficha finalizada", false],
+    ["21 ago", "Implantação do ensaio", "Ficha finalizada", false],
+  ];
+  return (
+    <ol className="trail rise" aria-label="Histórico de visitas do experimento (exemplo fictício)">
+      {rows.map(([d, t, s, on]) => (
+        <li key={d} className={cx("trail-item", on && "on")}>
+          <span className="trail-dot" aria-hidden />
+          <span className="s-small block font-mono opacity-70">{d}</span>
+          <span className="s-body block font-semibold leading-tight">{t}</span>
+          <span className="s-small block opacity-70">{s}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function FieldWork() {
+  return (
+    <div className="flex h-full flex-col gap-[2.4cqw]">
+      <Head k="Acompanhamento de campo" t={<>Cada visita registrada. <em>Cada informação no lugar certo.</em></>} />
+      <div className="field-grid flex-1">
+        <div className="s-stack">
+          <p className="s-lead rise">Consulte o histórico do experimento e continue de onde a última visita parou.</p>
+          <VisitTrail />
+        </div>
+        <FieldRecordMock />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 6 · Segurança e revisão científica
+// ---------------------------------------------------------------------------
+const FLOW: { n: string; t: string; d: string; i: Icon }[] = [
+  { n: "1", t: "Registro", d: "com fonte, autoria e data identificadas", i: FileText },
+  { n: "2", t: "Conferência", d: "por outra pessoa da equipe, não por quem escreveu", i: UserCheck },
+  { n: "3", t: "Validação científica", d: "pelo responsável pelo estudo ou revisor delegado", i: Microscope },
+  { n: "4", t: "Liberação", d: "revisão final autoriza cada canal de divulgação", i: Stamp },
+];
+
+function Review() {
+  return (
+    <div className="flex h-full flex-col justify-center gap-[2.6cqw]">
+      <Head k="Segurança e revisão científica" t={<>Informação organizada também precisa de <em>controle</em>.</>} />
+      <ol className="flow rise">
+        {FLOW.map((s) => (
+          <li key={s.t} className="flow-step">
+            <span className="flow-n">{s.n}</span>
+            <s.i aria-hidden className="flow-i" />
+            <span className="flow-t block font-display font-semibold">{s.t}</span>
+            <span className="s-body mt-[0.3cqw] block opacity-70">{s.d}</span>
+          </li>
+        ))}
+      </ol>
+      <ul className="rise flex flex-wrap gap-[0.8cqw]" aria-label="Benefícios">
+        {["Origem das informações identificada", "Histórico dos registros", "Controle de responsáveis e acessos", "Situação de revisão visível", "Autorização para divulgação por canal"].map((t) => (
+          <li key={t} className="s-pill">
+            <CircleCheck aria-hidden className="h-[1.15em] w-[1.15em] shrink-0" /> {t}
+          </li>
+        ))}
+      </ul>
+      <p className="s-small rise opacity-65">Cada decisão fica registrada com data, responsável e versão. Se o conteúdo mudar, a revisão recomeça.</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 7 · Indicadores e gestão
+// ---------------------------------------------------------------------------
+function IndicatorBoard() {
+  const maxF = Math.max(...DEMO.fases.map(([, n]) => n));
+  return (
+    <div className="mock board rise">
+      <div className="mb-[0.7em] flex items-center justify-between">
+        <span className="text-[0.95em] font-semibold">Visão geral · novembro</span>
+        <DemoBadge>Valores demonstrativos</DemoBadge>
+      </div>
+      <div className="grid grid-cols-2 gap-[0.6em] @[760px]:grid-cols-3">
+        <Stat label="Experimentos cadastrados" value={DEMO.experimentos} hint={`${DEMO.ativos} em acompanhamento ativo`} />
+        <Stat label="Registros devidos no mês" value={`${DEMO.taxa.pct}%`} hint={`${DEMO.taxa.num} de ${DEMO.taxa.den} elegíveis`} />
+        <Stat label="Visitas realizadas" value={DEMO.visitas.realizadas} hint={`${DEMO.visitas.previstas} previstas · ${DEMO.visitas.adiadas} adiada`} />
+        <Stat label="Pendências abertas" value={DEMO.pendencias.abertas} />
+        <Stat label="Pendências vencidas" value={DEMO.pendencias.vencidas} tone="danger" />
+        <Stat label="Em revisão" value={DEMO.revisao.slice(0, 3).reduce((a, [, n]) => a + n, 0)} hint="conteúdos na fila" />
+      </div>
+      <div className="mt-[0.7em] grid gap-[0.7em] @[760px]:grid-cols-2">
+        <div className="mock-card">
+          <p className="mb-[0.55em] text-[0.88em] font-semibold">Experimentos por situação</p>
+          <Bars data={DEMO.fases} max={maxF} />
+        </div>
+        <div className="mock-card">
+          <p className="mb-[0.55em] text-[0.88em] font-semibold">Revisão de conteúdos</p>
+          {DEMO.revisao.map(([l, n]) => (
+            <p key={l} className="flex justify-between border-b border-[#eef0ea] py-[0.3em] text-[0.85em] last:border-0">
+              {l} <strong className="tabular-nums">{n}</strong>
+            </p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Indicators() {
+  return (
+    <div className="s-grid2 wide-right h-full">
+      <div className="s-stack">
+        <Head k="Indicadores e gestão" t={<>Mais visibilidade para quem <em>coordena</em> pesquisas.</>} />
+        <Checks
+          dark
+          items={[
+            ["Filtros", "período, área, cultura, responsável e fase"],
+            ["Regra visível", "cada percentual mostra como é calculado"],
+            ["Relatórios", "exportação em CSV e PDF"],
+          ]}
+        />
+      </div>
+      <IndicatorBoard />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 8 · Públicos e aplicações
+// ---------------------------------------------------------------------------
+const AUDIENCES: { i: Icon; t: string; d: string; tags: string[] }[] = [
+  { i: GraduationCap, t: "Universidades e fazendas-escola", d: "Estudantes registram as visitas; orientadores acompanham e revisam o que foi feito.", tags: ["Visitas", "Revisão"] },
+  { i: Building2, t: "Estações experimentais", d: "Vários ensaios ao mesmo tempo, com local, fase e calendário de acompanhamento.", tags: ["Experimentos", "Agenda"] },
+  { i: Microscope, t: "Centros e instituições de pesquisa", d: "Resultados registrados com fonte, validados pelo responsável e com histórico.", tags: ["Resultados", "Histórico"] },
+  { i: Sprout, t: "Empresas de P&D agrícola", d: "Visão consolidada de estudos, responsáveis e pendências por área e cultura.", tags: ["Indicadores", "Pendências"] },
+];
+
+function Audiences() {
+  return (
+    <div className="flex h-full flex-col justify-center gap-[2.4cqw]">
+      <Head k="Públicos e aplicações" t={<>Desenvolvido para quem pesquisa, acompanha e <em>produz conhecimento</em>.</>} />
+      <div className="s-cards c4 rise">
+        {AUDIENCES.map((a, k) => (
+          <article key={a.t} className="s-card aud-card">
+            <span className="flex items-center justify-between">
+              <span className="s-icon">
+                <a.i aria-hidden />
+              </span>
+              <span className="s-num text-[#2a8150]/25" style={{ fontSize: "clamp(22px,2.6cqw,38px)" }}>
+                {String(k + 1).padStart(2, "0")}
+              </span>
+            </span>
+            <h3 className="s-body mt-[1cqw] font-display font-semibold leading-snug" style={{ fontSize: "clamp(15px,1.5cqw,21px)" }}>
+              {a.t}
+            </h3>
+            <p className="s-body mt-[0.6cqw] opacity-75">{a.d}</p>
+            <span className="mt-auto flex flex-wrap gap-[0.4cqw] pt-[1cqw]">
+              {a.tags.map((t) => (
+                <Chip key={t} c="green">
+                  {t}
+                </Chip>
+              ))}
+            </span>
+          </article>
+        ))}
+      </div>
+      <p className="s-small rise opacity-60">Exemplos de aplicação da plataforma em cada contexto.</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 9 · Demonstração
+// ---------------------------------------------------------------------------
+function ScreenList() {
+  const rows: [string, string, string, keyof typeof CHIP, string][] = [
+    ["EA360-014", "Manejo de lagartas em soja", "Em andamento", "green", "12/11"],
+    ["EA360-011", "Densidade de semeadura em milho", "Em andamento", "green", "10/11"],
+    ["EA360-009", "Cobertura vegetal no algodão", "Em implantação", "amber", "07/11"],
+    ["EA360-006", "Doses de potássio em soja", "Concluído", "gray", "28/10"],
+  ];
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <p className="font-display text-[1.2em] font-semibold">Experimentos</p>
+        <span className="rounded-[0.5em] bg-[#165d3b] px-[0.7em] py-[0.25em] text-[0.8em] font-semibold text-white">Novo experimento</span>
+      </div>
+      <table className="mt-[0.6em] w-full text-left text-[0.82em]">
+        <thead className="text-[0.85em] uppercase tracking-wide text-[#5b6760]">
+          <tr>
+            <th className="py-[0.3em] font-bold">Código</th>
+            <th className="font-bold">Título</th>
+            <th className="font-bold">Fase</th>
+            <th className="text-right font-bold">Atualização</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([c, t, f, k, d]) => (
+            <tr key={c} className="border-t border-[#eef0ea]">
+              <td className="py-[0.45em] font-mono font-bold text-[#2a8150]">{c}</td>
+              <td className="pr-[0.4em]">{t}</td>
+              <td>
+                <Chip c={k}>{f}</Chip>
+              </td>
+              <td className="text-right tabular-nums text-[#5b6760]">{d}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+function ScreenTimeline() {
+  return (
+    <>
+      <p className="font-mono text-[0.9em] font-bold text-[#2a8150]">EA360-014</p>
+      <p className="font-display text-[1.15em] font-semibold">Linha do tempo</p>
+      <ol className="mt-[0.6em] space-y-[0.5em] border-l-2 border-[#e2f0e4] pl-[0.9em] text-[0.85em]">
         {[
-          ["Cultura", "soja"],
-          ["Responsável", "Pesquisador(a) responsável"],
-          ["Delineamento", "DIC · 5 repetições"],
-          ["Fonte", "Documento do pesquisador"],
+          ["21/08", "Implantação do ensaio", "Etapa concluída", true],
+          ["18/09", "1ª avaliação", "Avaliação realizada", true],
+          ["12/11", "Visita de novembro", "Ficha conferida", true],
+          ["21/11", "Avaliação de desfolha", "Prevista", false],
+        ].map(([d, t, s, ok]) => (
+          <li key={t as string} className="relative">
+            <span className={cx("absolute -left-[1.32em] top-[0.3em] h-[0.7em] w-[0.7em] rounded-full", ok ? "bg-[#2a8150]" : "border-2 border-[#a7d572] bg-white")} />
+            <span className="font-mono text-[#5b6760]">{d as string}</span> · <strong className="font-semibold">{t as string}</strong>
+            <span className="block text-[0.9em] text-[#5b6760]">{s as string}</span>
+          </li>
+        ))}
+      </ol>
+    </>
+  );
+}
+
+function ScreenRecord() {
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <p className="font-display text-[1.15em] font-semibold">Ficha · EA360-014</p>
+        <Chip c="amber">Em preenchimento</Chip>
+      </div>
+      <div className="mt-[0.6em] grid gap-[0.5em] text-[0.85em]">
+        {[
+          ["Etapa atual", "Avaliações em andamento"],
+          ["Atividades realizadas desde a última visita", "Aplicação dos tratamentos"],
+          ["Observações diretas", "Parcelas sinalizadas e fotografadas"],
         ].map(([l, v]) => (
-          <div key={l}>
-            <p className="text-[0.75em] font-bold uppercase tracking-wide text-[#5b6760]">{l}</p>
+          <div key={l} className="rounded-[0.5em] border border-[#e3e7dd] px-[0.6em] py-[0.35em]">
+            <p className="text-[0.8em] font-bold uppercase tracking-wide text-[#5b6760]">{l}</p>
             <p>{v}</p>
           </div>
         ))}
       </div>
-    </div>
+      <p className="mt-[0.6em] text-[0.8em] font-semibold">Roteiro da visita</p>
+      {["Conferir sinalização das parcelas", "Registrar fotos com legenda", "Anotar ocorrências"].map((t, i) => (
+        <p key={t} className="flex items-center gap-[0.45em] text-[0.82em]">
+          <CircleCheck aria-hidden className={cx("h-[1.1em] w-[1.1em]", i < 2 ? "text-[#2a8150]" : "text-[#cdd4c6]")} /> {t}
+        </p>
+      ))}
+    </>
   );
 }
 
-function MockMap() {
+function ScreenReviewed() {
   return (
-    <div className="mock rise relative overflow-hidden p-0">
-      <svg viewBox="0 0 400 250" className="block w-full">
-        <rect width="400" height="250" fill="#eef4e6" />
-        {Array.from({ length: 9 }).map((_, i) => (
-          <path key={i} d={`M-20 ${40 + i * 26} Q 200 ${10 + i * 26} 420 ${60 + i * 24}`} stroke={i % 2 ? "#cfe3b8" : "#dcebc9"} strokeWidth="14" fill="none" />
+    <>
+      <p className="font-display text-[1.15em] font-semibold">Revisões e aprovações</p>
+      <p className="text-[0.8em] text-[#5b6760]">Nota técnica · Ensaio EA360-014 · versão 3</p>
+      <div className="mt-[0.6em] flex flex-wrap gap-[0.35em]">
+        {["Conferência", "Validação científica", "Revisão final"].map((s) => (
+          <Chip key={s} c="green">
+            <CircleCheck aria-hidden className="h-[1.05em] w-[1.05em]" /> {s}
+          </Chip>
         ))}
-        <path d="M0 200 C 120 170, 220 230, 400 180" stroke="#fff" strokeWidth="6" fill="none" />
+        <Chip c="dark">Liberado para publicação</Chip>
+      </div>
+      <div className="mt-[0.7em] space-y-[0.4em] text-[0.82em]">
         {[
-          [90, 90, "001"],
-          [190, 130, "007"],
-          [300, 80, "014"],
-          [250, 190, "009"],
-        ].map(([x, y, c], i) => (
-          <g key={c as string} transform={`translate(${x} ${y})`}>
-            <path d="M0 0 C -14 -16 -14 -34 0 -34 C 14 -34 14 -16 0 0 Z" fill={i === 2 ? "#165d3b" : "#3e9b5f"} />
-            <circle cx="0" cy="-22" r="5.5" fill={i === 2 ? "#a7d572" : "#fff"} />
-            <rect x="10" y="-36" width="40" height="16" rx="8" fill="#fff" />
-            <text x="30" y="-24.5" textAnchor="middle" fontSize="9" fontWeight="700" fill="#165d3b" fontFamily="monospace">
-              {c}
-            </text>
-          </g>
-        ))}
-      </svg>
-      <div className="flex items-center justify-between gap-[0.6cqw] border-t border-[#e3e7dd] p-[0.9cqw]">
-        <div>
-          <p className="font-mono text-[0.85em] font-bold text-[#2a8150]">EA360-014</p>
-          <p className="text-[0.8em] text-[#5b6760]">12.084100° S, 45.795300° O · GPS do celular</p>
-        </div>
-        <span className="inline-flex items-center gap-[0.3cqw] rounded-[0.6cqw] bg-[#165d3b] px-[0.7cqw] py-[0.35cqw] text-[0.8em] font-bold text-white">
-          <Navigation aria-hidden className="h-[1.1em] w-[1.1em]" /> Como chegar
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function MockFicha() {
-  return (
-    <div className="mock rise">
-      <div className="flex items-center justify-between">
-        <span className="font-display text-[1.15em] font-semibold">Ficha · EA360-007</span>
-        <Chip c="amber">Aguardando conferência</Chip>
-      </div>
-      <div className="mt-[0.9cqw] grid grid-cols-2 gap-[0.8cqw]">
-        <div className="rounded-[0.8cqw] border border-[#1f5f8b]/25 bg-[#e5f0f8]/60 p-[0.8cqw]">
-          <p className="text-[0.75em] font-bold uppercase tracking-wide text-[#1f5f8b]">Relato do pesquisador</p>
-          <p className="mt-[0.3cqw] text-[0.85em]">“Avaliação de desfolha prevista para a próxima semana.”</p>
-          <p className="mt-[0.3cqw] text-[0.72em] text-[#5b6760]">Informante identificado</p>
-        </div>
-        <div className="rounded-[0.8cqw] border border-[#9a5b07]/25 bg-[#fdf3df]/70 p-[0.8cqw]">
-          <p className="text-[0.75em] font-bold uppercase tracking-wide text-[#9a5b07]">Observação da equipe</p>
-          <p className="mt-[0.3cqw] text-[0.85em]">“Parcelas sinalizadas; fotos com legenda e autoria.”</p>
-          <p className="mt-[0.3cqw] text-[0.72em] text-[#5b6760]">Registrado em campo</p>
-        </div>
-      </div>
-      <div className="mt-[0.9cqw] space-y-[0.35cqw] text-[0.85em]">
-        {["Etapa atual confirmada", "Ocorrências com informante", "Fotos com legenda e autorização", "Pendências com responsável e prazo"].map((t, i) => (
-          <p key={t} className="flex items-center gap-[0.5cqw]">
-            <CircleCheck aria-hidden className={cx("h-[1.2em] w-[1.2em]", i < 3 ? "text-[#2a8150]" : "text-[#cdd4c6]")} /> {t}
+          ["Conferência interna", "aprovado · Estudante 2 · 05/11"],
+          ["Validação científica", "aprovado · Pesquisador(a) responsável · 08/11"],
+          ["Revisão final", "aprovado · Coordenação · 10/11"],
+        ].map(([a, b]) => (
+          <p key={a} className="flex flex-wrap justify-between gap-x-[0.6em] rounded-[0.5em] border border-[#e3e7dd] px-[0.6em] py-[0.35em]">
+            <span className="font-semibold">{a}</span>
+            <span className="text-[#5b6760]">{b}</span>
           </p>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
-function MockKanban() {
-  const cols: [string, string[]][] = [
-    ["A fazer", ["Confirmar calendário", "Fotos da parcela 3"]],
-    ["Em andamento", ["Pauta: monitoramento"]],
-    ["Aguardando terceiro", ["Retorno do pesquisador"]],
-    ["Concluída", ["Ficha de outubro"]],
-  ];
-  return (
-    <div className="mock rise grid grid-cols-4 gap-[0.7cqw] bg-[#f6f7f2]">
-      {cols.map(([t, cards], i) => (
-        <div key={t} className="rounded-[0.8cqw] bg-[#f1f3ec] p-[0.6cqw]">
-          <p className="mb-[0.5cqw] text-[0.75em] font-bold">{t}</p>
-          {cards.map((c) => (
-            <div key={c} className={cx("mb-[0.5cqw] rounded-[0.6cqw] border bg-white p-[0.5cqw] text-[0.78em] shadow-sm", i === 0 && c.startsWith("Fotos") ? "border-[#b42318]/40" : "border-[#e3e7dd]")}>
-              {c}
-              <p className="mt-[0.2cqw] text-[0.85em] text-[#5b6760]">{i === 0 && c.startsWith("Fotos") ? "vencida" : "prazo 15/11"}</p>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
+const STEPS: { t: string; d: string; path: string; active: string; screen: () => ReactNode }[] = [
+  { t: "Painel de pesquisas", d: "todos os estudos, com fase e última atualização", path: "bento · Experimentos", active: "Experimentos", screen: ScreenList },
+  { t: "Ficha do experimento", d: "etapas, avaliações e visitas em uma linha do tempo", path: "bento · Experimentos › EA360-014", active: "Experimentos", screen: ScreenTimeline },
+  { t: "Registro do acompanhamento", d: "ficha preenchida durante a visita, com roteiro", path: "bento · Visitas › Visita de novembro", active: "Visitas", screen: ScreenRecord },
+  { t: "Informações revisadas", d: "cada etapa de revisão registrada por versão", path: "bento · Aprovações", active: "Aprovações", screen: ScreenReviewed },
+];
+const STEP_MS = 5000;
 
-function MockPipeline({ active = 3 }: { active?: number }) {
-  const steps = ["Rascunho", "Conferência", "Validação científica", "Revisão final", "Liberado", "Publicado"];
+function DemoTour() {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const auto = !paused && !reduced;
+  useEffect(() => {
+    if (!auto) return;
+    const t = window.setTimeout(() => setI((n) => (n + 1) % STEPS.length), STEP_MS);
+    return () => window.clearTimeout(t);
+  }, [auto, i]);
+
+  const s = STEPS[i];
+  const Screen = s.screen;
   return (
-    <div className="mock rise">
-      <div className="flex flex-wrap gap-[0.5cqw]">
-        {steps.map((s, i) => (
-          <span key={s} className={cx("mock-chip", i < active ? "bg-[#e2f0e4] text-[#165d3b]" : i === active ? "bg-[#165d3b] text-white" : "bg-[#f1f3ec] text-[#5b6760]")}>
-            {i < active && <CircleCheck aria-hidden className="h-[1.1em] w-[1.1em]" />}
-            {s}
-          </span>
+    <div className="demo" ref={box} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={(e) => !box.current?.contains(e.relatedTarget as Node) && setPaused(false)}>
+      <ol className="demo-steps rise" aria-label="Etapas da demonstração">
+        {STEPS.map((x, k) => (
+          <li key={x.t}>
+            <button type="button" className={cx("demo-step", k === i && "on")} aria-current={k === i ? "step" : undefined} onClick={() => setI(k)}>
+              <span className="demo-n">{k + 1}</span>
+              <span className="min-w-0">
+                <span className="s-body block font-semibold leading-tight">{x.t}</span>
+                <span className="s-small block opacity-70">{x.d}</span>
+              </span>
+              {k === i && auto && <span key={`p-${i}`} className="demo-progress" style={{ animationDuration: `${STEP_MS}ms` }} aria-hidden />}
+            </button>
+          </li>
         ))}
-      </div>
-      <div className="mt-[1cqw] space-y-[0.5cqw] text-[0.85em]">
-        {[
-          ["Conferência interna", "aprovado · Estudante 2 · v3"],
-          ["Validação científica", "aprovado · Pesquisador responsável · v3"],
-          ["Revisão final", "aguardando · Coordenação"],
-        ].map(([a, b], i) => (
-          <div key={a} className="flex items-center justify-between rounded-[0.6cqw] border border-[#e3e7dd] px-[0.7cqw] py-[0.45cqw]">
-            <span className="font-semibold">{a}</span>
-            <span className={cx("text-[0.9em]", i === 2 ? "text-[#9a5b07]" : "text-[#5b6760]")}>{b}</span>
+      </ol>
+      <div className="demo-screen rise">
+        <Window key={i} path={s.path} active={s.active} className="demo-win">
+          <div className="demo-swap">
+            <Screen />
           </div>
-        ))}
-      </div>
-      <p className="mt-[0.8cqw] font-mono text-[0.72em] text-[#5b6760]">versão 3 · sha256 9f2c41ab… · imutável</p>
-    </div>
-  );
-}
-
-function MockPhone() {
-  return (
-    <div className="rise mx-auto w-[clamp(170px,22cqw,300px)] rounded-[2.6cqw] border-[0.6cqw] border-[#0a2e1d] bg-[#f6f7f2] p-[0.8cqw] text-[#14211a] shadow-2xl">
-      <div className="mb-[0.8cqw] flex items-center gap-[0.6cqw]">
-        <BentoMark className="h-[2.4cqw] min-h-5 w-[2.4cqw] min-w-5" />
-        <span className="flex-1 rounded-full bg-white px-[0.8cqw] py-[0.35cqw] text-[clamp(8px,0.8cqw,11px)] text-[#5b6760]">Buscar…</span>
-      </div>
-      <p className="font-display text-[clamp(12px,1.4cqw,18px)] font-semibold">Visita de novembro</p>
-      <div className="mt-[0.6cqw] space-y-[0.5cqw]">
-        {["EA360-001 · ficha em preenchimento", "EA360-007 · enviada", "EA360-014 · conferida"].map((t, i) => (
-          <div key={t} className="rounded-[0.8cqw] bg-white p-[0.6cqw] text-[clamp(8px,0.85cqw,11px)] shadow-sm">
-            {t}
-            <div className="mt-[0.3cqw] h-[0.35cqw] min-h-[3px] rounded-full bg-[#f1f3ec]">
-              <div className="h-full rounded-full bg-[#3e9b5f]" style={{ width: `${[45, 80, 100][i]}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-[1cqw] grid grid-cols-5 gap-[0.3cqw] rounded-[1.4cqw] bg-white p-[0.4cqw] shadow">
-        {[LayoutDashboard, FlaskConical, CalendarCheck, CheckSquare, Layers].map((I, i) => (
-          <span key={i} className={cx("flex aspect-square items-center justify-center rounded-[0.8cqw]", i === 2 ? "bg-[#165d3b] text-[#a7d572]" : "text-[#5b6760]")}>
-            <I aria-hidden className="h-1/2 w-1/2" />
-          </span>
-        ))}
+        </Window>
       </div>
     </div>
   );
 }
 
-function MockBulletin() {
+function Demo() {
+  const demo = linkComercial(CONTATO_COMERCIAL.demonstracao);
   return (
-    <div className="rise relative mx-auto aspect-[1/1.414] w-[clamp(150px,20cqw,280px)]">
-      <div className="absolute inset-0 translate-x-[1.2cqw] translate-y-[1.2cqw] rotate-3 rounded-[0.8cqw] bg-white/60" />
-      <div className="absolute inset-0 flex flex-col justify-between overflow-hidden rounded-[0.8cqw] bg-gradient-to-b from-[#165d3b] to-[#0a2e1d] p-[1.4cqw] text-white shadow-2xl">
-        <div className="flex items-center gap-[0.6cqw]">
-          <BentoMark className="h-[2.2cqw] min-h-4 w-[2.2cqw] min-w-4" gap="#165d3b" />
-          <span className="text-[clamp(7px,0.8cqw,11px)]">Entomo Agro 360</span>
+    <div className="flex h-full flex-col gap-[2cqw]">
+      <div className="flex flex-wrap items-end justify-between gap-[1.5cqw]">
+        <Head k="Demonstração" t={<>Conheça o Bento <em>funcionando</em>.</>} lead="Da organização dos estudos ao acompanhamento das atividades." />
+        <div className="rise flex flex-wrap items-center gap-[1cqw]">
+          <Cta href={demo} variant="primary">
+            Agendar uma demonstração
+          </Cta>
+          <Link href="/login" className="s-cta s-cta-ghost">
+            <LogIn aria-hidden className="h-[1.1em] w-[1.1em]" /> Acessar a plataforma
+          </Link>
         </div>
-        <div>
-          <p className="text-[clamp(7px,0.8cqw,11px)] font-bold tracking-widest text-[#a7d572]">BOLETIM Nº 1</p>
-          <p className="font-display text-[clamp(13px,1.8cqw,24px)] font-bold leading-tight">Pesquisa em campo — 1º trimestre</p>
-        </div>
-        <p className="text-[clamp(6px,0.65cqw,9px)] text-white/60">versão 2 aprovada · sha256 · gerado pelo Bento</p>
       </div>
+      <DemoTour />
+      <p className="s-small rise opacity-60">Telas com dados fictícios. O acesso à plataforma é feito por convite, com login individual.</p>
     </div>
   );
 }
 
-function Timeline() {
-  const months = [
-    ["Alinhamento", "escopo, cadastro inicial e teste do roteiro"],
-    ["Visitas", "conferência e planejamento editorial"],
-    ["1º boletim", "primeira edição após revisão"],
-    ["Avaliação", "ajustes e rodízio de funções"],
-    ["Devolutiva", "2ª edição em preparação"],
-    ["Fechamento", "2º boletim, dossiê e relatório"],
-  ];
-  return (
-    <ol className="rise grid gap-[1cqw]" style={{ gridTemplateColumns: "repeat(6, minmax(0,1fr))" }}>
-      {months.map(([t, d], i) => (
-        <li key={t} className="relative">
-          <span className="s-num block text-[#a7d572]" style={{ fontSize: "clamp(22px,3.2cqw,46px)" }}>
-            {String(i + 1).padStart(2, "0")}
-          </span>
-          <span className="mt-[0.4cqw] block h-[3px] rounded-full bg-gradient-to-r from-[#a7d572] to-transparent" />
-          <span className="s-small mt-[0.6cqw] block font-bold">{t}</span>
-          <span className="s-small block opacity-70">{d}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function Opener({ ch }: { ch: Chapter }) {
+// ---------------------------------------------------------------------------
+// 10 · Conversão
+// ---------------------------------------------------------------------------
+function Closing() {
+  const demo = linkComercial(CONTATO_COMERCIAL.demonstracao);
+  const piloto = linkComercial(CONTATO_COMERCIAL.piloto);
   return (
     <div className="flex h-full flex-col justify-between gap-[3cqw]">
-      <Arcs className="-bottom-[10cqw] -right-[8cqw] h-[60cqw] w-[60cqw]" opacity={0.2} />
-      <span className="s-icon rise" style={{ width: "clamp(44px,5cqw,72px)", height: "clamp(44px,5cqw,72px)" }}>
-        <ch.icon aria-hidden />
-      </span>
-      <div className="rise">
-        <p className="s-num text-[#a7d572]" style={{ fontSize: "clamp(56px,11cqw,160px)", opacity: 0.9 }}>
-          {String(ch.n).padStart(2, "0")}
-        </p>
-        <h2 className="s-hero mt-[0.6cqw]">{ch.title}</h2>
-        <p className="s-lead mt-[1cqw]">{ch.subtitle}</p>
+      <Arcs className="-bottom-[14cqw] -right-[12cqw] h-[66cqw] w-[66cqw]" color="#ffffff" opacity={0.38} />
+      <div className="rise flex items-center gap-[1.1cqw]">
+        <BentoMark className="h-[4.6cqw] min-h-10 w-[4.6cqw] min-w-10" gap="#a7d572" />
+        <span className="font-display text-[clamp(24px,3cqw,42px)] font-bold tracking-tight">Bento</span>
+      </div>
+      <div className="s-stack max-w-[70cqw]">
+        <h2 className="s-hero rise" style={{ fontSize: "clamp(32px,5.2cqw,76px)" }}>
+          Sua equipe pode ter uma visão mais organizada de <em>cada pesquisa</em>.
+        </h2>
+        <p className="s-lead rise">Conheça como o Bento pode ser aplicado à rotina da sua instituição.</p>
+      </div>
+      <div className="rise s-stack">
+        <div className="flex flex-wrap items-center gap-[1.2cqw]">
+          <Cta href={demo} variant="dark">
+            Agendar uma demonstração
+          </Cta>
+          <Cta href={piloto} variant="secondary">
+            Conhecer o projeto piloto
+          </Cta>
+        </div>
+        <CtaNote />
+        <p className="s-small opacity-60">Bento · gestão de pesquisas e experimentos · desenvolvido a partir do projeto Entomo Agro 360</p>
       </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Lâminas
+// Sequência
 // ---------------------------------------------------------------------------
-const op = (n: number): SlideDef => {
-  const ch = CHAPTERS[n - 1];
-  return { id: `cap-${n}`, ch: n, title: `${String(n).padStart(2, "0")} · ${ch.title}`, keywords: ch.subtitle, tone: "dark", render: () => <Opener ch={ch} /> };
-};
-
 export const SLIDES: SlideDef[] = [
-  {
-    id: "capa",
-    ch: 0,
-    title: "Bento — gestão científica do Entomo Agro 360",
-    keywords: "capa início apresentação",
-    tone: "dark",
-    render: () => (
-      <div className="flex h-full flex-col justify-between gap-[3cqw]">
-        <Arcs className="-bottom-[14cqw] -right-[10cqw] h-[70cqw] w-[70cqw]" opacity={0.22} />
-        <div className="rise flex items-center gap-[1.2cqw]">
-          <BentoMark className="h-[5cqw] min-h-10 w-[5cqw] min-w-10" gap="#165d3b" />
-          <span className="s-small font-semibold tracking-[0.2em] text-white/70">GESTÃO CIENTÍFICA | ENTOMO AGRO 360</span>
-        </div>
-        <div className="s-stack">
-          <p className="s-kicker rise">Apresentação da plataforma</p>
-          <h1 className="s-hero rise">
-            Do campo à <em>publicação</em>,
-            <br />
-            com rastreabilidade.
-          </h1>
-          <p className="s-lead rise max-w-[56cqw]">Como o Bento organiza experimentos, visitas, resultados e a divulgação científica do projeto — e quem faz o quê em cada etapa.</p>
-        </div>
-        <div className="rise flex flex-wrap gap-[1.4cqw] s-small text-white/70">
-          <span>8 capítulos</span>·<span>{SLIDES.length} lâminas</span>·<span>Fazenda Meraki · Luís Eduardo Magalhães/BA</span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "indice",
-    ch: 0,
-    title: "Índice",
-    keywords: "índice sumário capítulos agenda",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full" style={{ alignItems: "start" }}>
-        <Head k="Índice" t={<>O que você vai <em>conhecer</em></>} lead="Navegue com as setas do teclado, deslize no celular ou abra o sumário a qualquer momento." />
-        <ol className="rise grid grid-cols-1 gap-[0.6cqw] @[560px]:grid-cols-2">
-          {CHAPTERS.map((c) => (
-            <li key={c.n} className="s-card flex items-center gap-[1cqw]" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-              <span className="s-num text-[#2a8150]" style={{ fontSize: "clamp(18px,2.2cqw,32px)" }}>
-                {String(c.n).padStart(2, "0")}
-              </span>
-              <span>
-                <span className="s-body block font-semibold">{c.title}</span>
-                <span className="s-small block opacity-65">{c.subtitle}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    ),
-  },
-
-  // 01 · O Bento
-  op(1),
-  {
-    id: "projeto",
-    ch: 1,
-    title: "O projeto Entomo Agro 360",
-    keywords: "projeto fazenda meraki uneb piloto boletim dossiê",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head
-          k="O contexto"
-          t={<>Um projeto de <em>acompanhamento</em> e divulgação científica</>}
-          lead="Estudantes acompanham pesquisas agrícolas na Fazenda Meraki, em Luís Eduardo Magalhães (BA), e transformam o que é validado em boletins, dossiê e conteúdos."
-        />
-        <div className="s-cards rise">
-          {[
-            ["6", "meses de piloto", "com visitas mensais"],
-            ["2", "boletins", "no 3º e no 6º mês"],
-            ["1", "dossiê", "técnico-científico ao final"],
-            ["∞", "culturas", "não só entomologia"],
-          ].map(([n, t, d]) => (
-            <div key={t} className="s-card">
-              <p className="s-num text-[#2a8150]">{n}</p>
-              <p className="s-body font-semibold">{t}</p>
-              <p className="s-small opacity-70">{d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "desafio",
-    ch: 1,
-    title: "O desafio",
-    keywords: "problema planilhas whatsapp fotos aprovações espalhado",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head k="O desafio" t={<>Informação de pesquisa costuma ficar <em>espalhada</em></>} lead="E quando chega a hora de divulgar, ninguém sabe ao certo o que foi conferido — nem quem autorizou." />
-        <div className="s-cards rise">
-          <Card i={FileSpreadsheet} t="Planilhas soltas" d="versões diferentes em cada computador" />
-          <Card i={Camera} t="Fotos sem contexto" d="sem legenda, autoria ou autorização" />
-          <Card i={Mail} t="Aprovações por mensagem" d="sem registro de versão ou data" />
-          <Card i={EyeOff} t="Sem visão do todo" d="o que está atrasado? o que já foi feito?" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "o-que-e",
-    ch: 1,
-    title: "O que é o Bento",
-    keywords: "definição pilares organizar validar comunicar",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="A plataforma" t={<>O Bento é a <em>base de acompanhamento e comunicação</em> do projeto</>} />
-        <div className="s-cards c3 rise">
-          <Card i={Layers} t="Organizar" d="experimentos, visitas, arquivos e tarefas em um só lugar, com código único e histórico" />
-          <Card i={BadgeCheck} t="Validar" d="nada é divulgado sem conferência, validação do pesquisador e autorização final" />
-          <Card i={Megaphone} t="Comunicar" d="boletins, dossiê, Instagram e portal gerados a partir do que foi aprovado" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "nao-e",
-    ch: 1,
-    title: "O que o Bento não é",
-    keywords: "limites caderno de campo interpretação estatística",
-    tone: "lime",
-    render: () => (
-      <div className="flex h-full flex-col justify-center gap-[2cqw]">
-        <Quote aria-hidden className="rise h-[5cqw] min-h-8 w-[5cqw] min-w-8 opacity-60" />
-        <p className="s-title rise max-w-[80cqw]">
-          O Bento <em>não substitui</em> o caderno de campo, a condução do experimento nem as análises dos pesquisadores.
-        </p>
-        <div className="s-cards c3 rise">
-          <Card i={Scale} t="Não interpreta" d="sem rankings, médias recalculadas ou conclusões automáticas" />
-          <Card i={PenLine} t="Não completa dados" d="o que não foi informado fica “Não informado”" />
-          <Card i={Send} t="Não publica sozinho" d="toda publicação é registrada por uma pessoa, com data e canal" />
-        </div>
-      </div>
-    ),
-  },
-
-  // 02 · Pessoas & princípios
-  op(2),
-  {
-    id: "principios",
-    ch: 2,
-    title: "7 princípios de registro",
-    keywords: "princípios fonte autoria não informado original autorização",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Como registramos" t={<>7 princípios que valem para <em>todo</em> registro</>} />
-        <ol className="rise grid gap-[0.8cqw] @[760px]:grid-cols-2">
-          {[
-            "Fonte, autoria, data, conferência e última atualização sempre identificadas",
-            "Relato do pesquisador ≠ observação direta da equipe ≠ conteúdo editorial",
-            "Nada de estimativa: “Não informado” ou “A confirmar”",
-            "Código Bento sempre ligado ao código institucional original",
-            "Arquivos originais nunca são alterados — novas versões com motivo",
-            "Material público só com informação e imagens aprovadas para aquele uso",
-            "Restrições de acesso respeitadas em buscas, exportações e PDFs",
-          ].map((t, i) => (
-            <li key={t} className="s-card flex items-start gap-[1cqw]" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-              <span className="s-num text-[#2a8150]" style={{ fontSize: "clamp(18px,2.1cqw,30px)" }}>
-                {i + 1}
-              </span>
-              <span className="s-body">{t}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    ),
-  },
-  {
-    id: "papeis",
-    ch: 2,
-    title: "Quem usa: papéis",
-    keywords: "papéis permissões administrador coordenação pesquisador estudante editor leitor visitante",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Quem usa" t={<>Cada pessoa vê e faz <em>só o que lhe cabe</em></>} />
-        <div className="s-cards c3 rise">
-          <Card i={Settings} t="Administração" d="equipe, convites e configurações — sem aprovar conteúdo" />
-          <Card i={GraduationCap} t="Coordenação / orientador" d="panorama, revisão final e liberação para publicação" />
-          <Card i={Microscope} t="Pesquisador responsável" d="vê seus estudos e valida o que é deles" />
-          <Card i={Users} t="Estudantes / equipe" d="cadastram, visitam, registram e preparam conteúdos" />
-          <Card i={PenLine} t="Editor" d="pautas e edição; revisão final só com delegação" />
-          <Card i={Eye} t="Leitor e visitante" d="consulta o que foi compartilhado ou publicado" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "acesso",
-    ch: 2,
-    title: "Acesso por experimento",
-    keywords: "proprietário colaborador revisor visualizador nível de acesso privado",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head
-          k="Além do papel"
-          t={<>O acesso também depende do <em>vínculo com cada experimento</em></>}
-          lead="Um pesquisador não enxerga automaticamente os resultados reservados de outro estudo."
-        />
-        <div className="s-stack rise">
-          {[
-            [UserCheck, "Proprietário", "responsável pelo estudo: edita e valida"],
-            [Users, "Colaborador", "contribui com o cadastro e os registros"],
-            [BadgeCheck, "Revisor delegado", "valida cientificamente por delegação"],
-            [Eye, "Visualizador", "somente leitura"],
-          ].map(([I, t, d]) => {
-            const Icon = I as typeof Sprout;
-            return (
-              <div key={t as string} className="s-card flex items-center gap-[1cqw]" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-                <span className="s-icon">
-                  <Icon aria-hidden />
-                </span>
-                <span className="s-body">
-                  <strong>{t as string}</strong> — {d as string}
-                </span>
-              </div>
-            );
-          })}
-          <p className="s-small opacity-70">Níveis do experimento: privado (gestão + membros) ou equipe e colaboradores. Nenhum nível torna dados públicos.</p>
-        </div>
-      </div>
-    ),
-  },
-
-  // 03 · Do campo ao registro
-  op(3),
-  {
-    id: "mapa-modulos",
-    ch: 3,
-    title: "Mapa da plataforma",
-    keywords: "módulos menu visão geral experimentos visitas atividades resultados biblioteca aprovações editorial relatórios equipe configurações",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Mapa da plataforma" t={<>12 módulos, uma <em>única base</em></>} />
-        <div className="s-cards c4 rise">
-          {[
-            [LayoutDashboard, "Visão geral"],
-            [FlaskConical, "Experimentos"],
-            [CalendarCheck, "Visitas"],
-            [CheckSquare, "Atividades"],
-            [Sprout, "Resultados"],
-            [FolderOpen, "Biblioteca"],
-            [ClipboardCheck, "Aprovações"],
-            [Newspaper, "Editorial"],
-            [BarChart3, "Relatórios"],
-            [Users, "Equipe"],
-            [Settings, "Configurações"],
-            [Globe, "Portal público"],
-          ].map(([I, t]) => {
-            const Icon = I as typeof Sprout;
-            return (
-              <div key={t as string} className="s-card flex items-center gap-[0.8cqw]" style={{ padding: "clamp(9px,1cqw,14px)" }}>
-                <span className="s-icon">
-                  <Icon aria-hidden />
-                </span>
-                <span className="s-body font-semibold">{t as string}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "visao-geral",
-    ch: 3,
-    title: "Visão geral",
-    keywords: "painel dashboard indicadores agenda piloto pendências",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Visão geral" t={<>Um painel de <em>ação</em>, com números reais</>} />
-          <Points
-            items={[
-              { i: Target, t: "Registros devidos no mês", d: "com numerador, denominador e regra visíveis" },
-              { i: Clock, t: "Agenda dos próximos 7 e 30 dias", d: "no fuso da Bahia" },
-              { i: Bell, t: "Pendências e revisões", d: "o que está vencido e quem precisa agir" },
-            ]}
-          />
-        </div>
-        <MockPanel />
-      </div>
-    ),
-  },
-  {
-    id: "experimentos",
-    ch: 3,
-    title: "Experimentos",
-    keywords: "cadastro código ea360 abas fonte rascunho arquivar",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Experimentos" t={<>Cada pesquisa com <em>código único</em> e história completa</>} />
-          <Points
-            items={[
-              { i: Hash, t: "Código EA360-001 gerado pelo banco", d: "nunca reutilizado, ligado ao código institucional" },
-              { i: PenLine, t: "Rascunho parcial permitido", d: "o essencial é exigido só ao ativar o acompanhamento" },
-              { i: Archive, t: "Arquivar sem apagar", d: "histórico e autoria preservados" },
-            ]}
-          />
-        </div>
-        <MockExperiment />
-      </div>
-    ),
-  },
-  {
-    id: "coordenadas",
-    ch: 3,
-    title: "Coordenadas e mapa",
-    keywords: "coordenadas gps mapa localização como chegar google maps",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Novo · Localização" t={<>Encontre qualquer experimento <em>no campo</em></>} />
-          <Points
-            items={[
-              { i: Crosshair, t: "GPS do celular", d: "um toque na hora da visita captura a posição" },
-              { i: MapPin, t: "Colar do Google Maps", d: "link ou “latitude, longitude” — o Bento entende" },
-              { i: Navigation, t: "Mapa e “Como chegar”", d: "todos os experimentos localizados em uma tela" },
-              { i: Lock, t: "Uso interno", d: "coordenadas nunca vão para materiais públicos" },
-            ]}
-          />
-        </div>
-        <MockMap />
-      </div>
-    ),
-  },
-  {
-    id: "importar",
-    ch: 3,
-    title: "Importar e exportar",
-    keywords: "importação planilha modelo csv xlsx exportação duplicatas",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Planilhas" t={<>Traga cadastros existentes com o <em>modelo oficial</em></>} lead="Baixe o modelo, preencha uma linha por experimento e importe — com prévia, validação e desfazer lote." />
-        <Flow
-          dark={false}
-          steps={[
-            { i: Download, t: "Baixar modelo", d: "31 colunas" },
-            { i: FileSpreadsheet, t: "Preencher", d: "CSV ou XLSX" },
-            { i: Upload, t: "Enviar e mapear", d: "colunas reconhecidas" },
-            { i: Search, t: "Prévia", d: "duplicata só por código" },
-            { i: CircleCheck, t: "Confirmar", d: "lote registrado" },
-          ]}
-        />
-        <p className="s-small rise opacity-70">Colunas extras não são descartadas: ficam nas observações. Exportações respeitam as permissões de quem baixa.</p>
-      </div>
-    ),
-  },
-  {
-    id: "visitas",
-    ch: 3,
-    title: "Visitas: do agendamento à ficha",
-    keywords: "visitas fluxo agendar realizar preencher conferir finalizar calendário",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Visitas" t={<>Uma visita, várias fichas — <em>uma por experimento</em></>} />
-        <Flow
-          steps={[
-            { i: CalendarCheck, t: "Planejar", d: "data, local e experimentos" },
-            { i: MapPin, t: "Realizar", d: "visita adiada nunca vira realizada" },
-            { i: PenLine, t: "Preencher", d: "relato × observação" },
-            { i: UserCheck, t: "Conferir", d: "por outra pessoa" },
-            { i: FileCheck2, t: "Finalizar", d: "PDF da ficha" },
-          ]}
-        />
-        <p className="s-small rise opacity-70">Calendário mensal e semanal, aviso de visita devida no mês e roteiro (checklist) configurável.</p>
-      </div>
-    ),
-  },
-  {
-    id: "ficha",
-    ch: 3,
-    title: "A ficha de acompanhamento",
-    keywords: "ficha relato pesquisador observação estudantes roteiro pendência tarefa pdf",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="A ficha" t={<>Quem disse o quê fica <em>sempre claro</em></>} />
-          <Points
-            items={[
-              { i: Quote, t: "Relato do pesquisador", d: "com o informante identificado" },
-              { i: Eye, t: "Observação direta da equipe", d: "em campo separado" },
-              { i: ListChecks, t: "Pendência vira tarefa", d: "com responsável, prazo e vínculo à visita" },
-            ]}
-          />
-        </div>
-        <MockFicha />
-      </div>
-    ),
-  },
-  {
-    id: "atividades",
-    ch: 3,
-    title: "Atividades e pendências",
-    keywords: "atividades tarefas kanban quadro rotinas recorrentes prazos notificações",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Atividades" t={<>Um quadro que <em>salva de verdade</em></>} lead="Arraste, mude a situação e o banco registra. Rotinas mensais são geradas sem duplicar." />
-        <MockKanban />
-      </div>
-    ),
-  },
-
-  // 04 · Dados & evidências
-  op(4),
-  {
-    id: "resultados",
-    ch: 4,
-    title: "Resultados recebidos",
-    keywords: "resultados síntese conferência validação escopo canal versão interpretação",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head k="Resultados" t={<>Registro <em>descritivo</em> do que o pesquisador forneceu</>} lead="O Bento guarda a síntese recebida, a fonte, as limitações e a situação da análise — sem recalcular nada." />
-        <div className="s-stack rise">
-          {[
-            ["1", "Registro", "estudante copia a síntese como recebida", "gray"],
-            ["2", "Conferência", "outra pessoa da equipe confere", "blue"],
-            ["3", "Validação", "o responsável pelo estudo valida", "green"],
-            ["4", "Escopo", "escolhe onde pode ser divulgado: boletim, dossiê, Instagram, portal", "lime"],
-          ].map(([n, t, d, c]) => (
-            <div key={t} className="s-card flex items-center gap-[1cqw]" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-              <Chip c={c as keyof typeof CHIP}>{n}</Chip>
-              <span className="s-body">
-                <strong>{t}</strong> — {d}
-              </span>
-            </div>
-          ))}
-          <p className="s-small opacity-70">Mudou a interpretação? Nova versão, e a validação anterior deixa de valer.</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "biblioteca",
-    ch: 4,
-    title: "Biblioteca",
-    keywords: "biblioteca arquivos fotos documentos versões autorização privado link temporário",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Biblioteca" t={<>Fotos e documentos <em>privados por padrão</em></>} />
-        <div className="s-cards c4 rise">
-          <Card i={Camera} t="Foto com legenda" d="autoria e data obrigatórias" />
-          <Card i={History} t="Versões" d="original nunca sobrescrito; motivo da troca" />
-          <Card i={Stamp} t="Autorização de uso" d="interno ou divulgação por canal" />
-          <Card i={KeyRound} t="Link temporário" d="só após checar a permissão" />
-        </div>
-        <p className="s-small rise opacity-70">Upload múltiplo com progresso, links externos para arquivos institucionais e download auditável.</p>
-      </div>
-    ),
-  },
-
-  // 05 · Revisão & publicação
-  op(5),
-  {
-    id: "tres-chaves",
-    ch: 5,
-    title: "As três chaves",
-    keywords: "revisão aprovação conferência validação científica revisão final liberação",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Motor de revisão" t={<>Três chaves antes de <em>qualquer</em> publicação</>} />
-          <Points
-            items={[
-              { i: UserCheck, t: "Conferência interna", d: "por alguém que não escreveu a versão" },
-              { i: Microscope, t: "Validação científica", d: "pelo responsável pelos estudos citados" },
-              { i: Stamp, t: "Revisão final", d: "coordenação autoriza canal por canal" },
-            ]}
-          />
-        </div>
-        <MockPipeline />
-      </div>
-    ),
-  },
-  {
-    id: "versao",
-    ch: 5,
-    title: "Versão imutável",
-    keywords: "snapshot versão imutável hash editar reabre ciclo",
-    tone: "dark",
-    render: () => (
-      <div className="flex h-full flex-col justify-center gap-[2.4cqw]">
-        <Head k="Versões" t={<>O que foi aprovado é <em>exatamente</em> o que será publicado</>} />
-        <div className="s-cards c3 rise">
-          <Card i={FileLock2} t="Snapshot imutável" d="ao enviar para revisão, o texto é congelado com hash" />
-          <Card i={Repeat} t="Editou? Novo ciclo" d="qualquer mudança relevante exige nova revisão" />
-          <Card i={History} t="Histórico completo" d="quem decidiu, quando, em qual versão e para qual canal" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "boletins",
-    ch: 5,
-    title: "Boletins",
-    keywords: "boletim edição seções pdf capa meta trimestral",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Boletins" t={<>Edições montadas a partir do que foi <em>validado</em></>} />
-          <Points
-            items={[
-              { i: ListChecks, t: "7 seções do pré-projeto", d: "apresentação, panorama, destaque, resultados, entomologia, agenda e créditos" },
-              { i: FileText, t: "PDF real", d: "capa, numeração, versão, hash e data de geração" },
-              { i: Target, t: "Meta do piloto", d: "2 edições — nada gerado automaticamente" },
-            ]}
-          />
-        </div>
-        <MockBulletin />
-      </div>
-    ),
-  },
-  {
-    id: "dossie",
-    ch: 5,
-    title: "Dossiê técnico-científico",
-    keywords: "dossiê assistente período seleção lacunas aprovação pdf",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Dossiê" t={<>Um assistente em <em>5 etapas</em>, com seleção humana</>} />
-        <Flow
-          steps={[
-            { i: CalendarCheck, t: "Período", d: "e escopo" },
-            { i: ListChecks, t: "Seleção", d: "dos experimentos" },
-            { i: Search, t: "Lacunas", d: "fontes e autorizações" },
-            { i: PenLine, t: "Síntese", d: "só o verificável" },
-            { i: FileCheck2, t: "Aprovação", d: "e PDF final" },
-          ]}
-        />
-        <p className="s-small rise opacity-70">A versão de divulgação nunca incorpora contatos, coordenadas ou campos privados.</p>
-      </div>
-    ),
-  },
-  {
-    id: "instagram",
-    ch: 5,
-    title: "Instagram",
-    keywords: "instagram pauta legenda checklist publicação manual métricas dúvidas",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head
-          k="Instagram"
-          t={<>Gestão editorial — <em>sem automação</em> escondida</>}
-          lead="Calendário de feed, carrossel, reels e stories; legenda com contador; aprovação por versão; publicação manual registrada com link e data."
-        />
-        <div className="mock rise">
-          {[
-            ["Autorização de imagem", true],
-            ["Fonte e referências", true],
-            ["Revisão científica", true],
-            ["Revisão institucional", true],
-            ["Créditos", true],
-            ["Publicação registrada", false],
-          ].map(([t, ok]) => (
-            <p key={t as string} className="flex items-center gap-[0.6cqw] border-b border-[#e3e7dd] py-[0.5cqw] text-[1.05em] last:border-0">
-              <CircleCheck aria-hidden className={cx("h-[1.2em] w-[1.2em]", ok ? "text-[#2a8150]" : "text-[#cdd4c6]")} />
-              {t as string}
-            </p>
-          ))}
-          <p className="mt-[0.6cqw] text-[0.8em] text-[#5b6760]">Métricas inseridas manualmente, com data de referência.</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "portal",
-    ch: 5,
-    title: "Portal público",
-    keywords: "portal público site publicações feedback transparência desativado",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head k="Portal público" t={<>Ligado só com <em>autorização institucional</em></>} lead="Até lá, a página inicial mostra apenas uma apresentação genérica." />
-        <div className="s-stack rise">
-          <Points
-            items={[
-              { i: Globe, t: "Só o que foi liberado para o portal", d: "a partir do snapshot aprovado" },
-              { i: Repeat, t: "Revogou? Some na hora", d: "com errata quando necessário" },
-              { i: Mail, t: "Feedback com consentimento", d: "anônimo, moderado e com limite anti-spam" },
-            ]}
-          />
-        </div>
-      </div>
-    ),
-  },
-
-  // 06 · Gestão do piloto
-  op(6),
-  {
-    id: "indicadores",
-    ch: 6,
-    title: "Relatórios e indicadores",
-    keywords: "relatórios indicadores percentual mensal registros devidos csv pdf",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <div className="s-stack">
-          <Head k="Indicadores" t={<>Medir o piloto com <em>regras explícitas</em></>} />
-          <Points
-            items={[
-              { i: FlaskConical, t: "Experimentos e visitas", d: "cadastrados, ativos, acompanhados, fichas conferidas" },
-              { i: Newspaper, t: "Conteúdos e boletins", d: "produzidos, validados, liberados, publicados × meta" },
-              { i: Download, t: "CSV e PDF", d: "exportações respeitando permissões" },
-            ]}
-          />
-        </div>
-        <div className="s-card rise text-center" style={{ padding: "clamp(16px,2.4cqw,36px)" }}>
-          <p className="s-small font-bold uppercase tracking-widest opacity-60">Registros devidos atualizados no mês</p>
-          <p className="s-num mt-[1cqw] text-[#2a8150]">83%</p>
-          <p className="s-body mt-[1cqw] font-mono">10 atualizados ÷ 12 previstos × 100</p>
-          <p className="s-small mt-[1cqw] opacity-70">Exclui pesquisas encerradas sem atualização devida — e mostra a regra junto do número.</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "linha-do-tempo",
-    ch: 6,
-    title: "Linha do tempo do piloto",
-    keywords: "linha do tempo meses piloto marcos cronograma",
-    tone: "dark",
-    render: () => (
-      <div className="flex h-full flex-col justify-center gap-[3cqw]">
-        <Head k="Seis meses" t={<>A linha do tempo do <em>piloto</em></>} lead="Início real configurado pela administração — com marcos editáveis e possibilidade de prorrogação." />
-        <Timeline />
-      </div>
-    ),
-  },
-  {
-    id: "equipe",
-    ch: 6,
-    title: "Equipe, convites e rodízio",
-    keywords: "equipe convite papel rodízio frentes articulação registros comunicação suspensão",
-    tone: "light",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head k="Equipe" t={<>Contas só por <em>convite</em>, funções que giram</>} lead="O link do convite vale 7 dias e é exibido uma única vez. Suspender um acesso não apaga a autoria histórica." />
-        <div className="s-cards rise">
-          <Card i={Building2} t="Articulação" d="agenda, interlocutores e pendências" />
-          <Card i={FolderOpen} t="Registros" d="fichas, fotos e consistência" />
-          <Card i={Megaphone} t="Comunicação" d="pautas, boletins e Instagram" />
-          <Card i={Repeat} t="Rodízio trimestral" d="com histórico de cada período" />
-        </div>
-      </div>
-    ),
-  },
-
-  // 07 · Confiança & segurança
-  op(7),
-  {
-    id: "seguranca",
-    ch: 7,
-    title: "Segurança em camadas",
-    keywords: "segurança rls permissões banco storage privado auditoria convite",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 h-full">
-        <Head k="Segurança" t={<>Esconder um botão <em>não é</em> controle de acesso</>} lead="As regras vivem no banco de dados: mesmo uma requisição direta não consegue pular etapas." />
-        <div className="s-stack rise">
-          {[
-            [Database, "Regras no banco (RLS)", "cada linha checada por organização, papel e vínculo"],
-            [Fingerprint, "Fluxos protegidos", "situações só mudam pelas etapas de revisão"],
-            [FileLock2, "Arquivos privados", "links temporários após checar a permissão"],
-            [History, "Auditoria", "quem alterou o quê e quando"],
-          ].map(([I, t, d]) => {
-            const Icon = I as typeof Sprout;
-            return (
-              <div key={t as string} className="s-card flex items-center gap-[1cqw]" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-                <span className="s-icon">
-                  <Icon aria-hidden />
-                </span>
-                <span className="s-body">
-                  <strong>{t as string}</strong> — <span className="opacity-75">{d as string}</span>
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "privacidade",
-    ch: 7,
-    title: "Privacidade e LGPD",
-    keywords: "privacidade lgpd dados pessoais contatos minimização consentimento",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Privacidade" t={<>Dados mínimos, <em>finalidade clara</em></>} />
-        <div className="s-cards c4 rise">
-          <Card i={Lock} t="Contatos restritos" d="nunca vão para o portal" />
-          <Card i={MapPin} t="Coordenadas internas" d="fora de qualquer divulgação" />
-          <Card i={Mail} t="Feedback anônimo" d="sem guardar IP; com consentimento" />
-          <Card i={Scale} t="Correção e exclusão" d="respeitando a integridade científica" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "celular",
-    ch: 7,
-    title: "No campo, no celular",
-    keywords: "celular mobile campo barra inferior gps rascunho conexão",
-    tone: "dark",
-    render: () => (
-      <div className="s-grid2 reverse h-full">
-        <MockPhone />
-        <div className="s-stack">
-          <Head k="Em campo" t={<>Feito para usar <em>durante a visita</em></>} />
-          <Points
-            items={[
-              { i: Smartphone, t: "Barra de navegação no rodapé", d: "e o restante na folha “Mais”" },
-              { i: Crosshair, t: "GPS em um toque", d: "para a coordenada do experimento" },
-              { i: WifiOff, t: "Sinal fraco?", d: "o formulário guarda um rascunho na aba até você salvar" },
-            ]}
-          />
-        </div>
-      </div>
-    ),
-  },
-
-  // 08 · Começando
-  op(8),
-  {
-    id: "primeiros-passos",
-    ch: 8,
-    title: "Primeiros passos",
-    keywords: "começar onboarding primeiros passos configurar convidar cadastrar",
-    tone: "light",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Primeiros passos" t={<>8 passos para colocar o projeto <em>em operação</em></>} />
-        <ol className="rise grid gap-[0.7cqw] @[760px]:grid-cols-4 grid-cols-2">
-          {[
-            "Configurar o início do piloto",
-            "Convidar a equipe",
-            "Cadastrar fazenda e áreas",
-            "Cadastrar o 1º experimento",
-            "Agendar uma visita",
-            "Registrar a ficha",
-            "Solicitar revisão",
-            "Preparar a publicação",
-          ].map((t, i) => (
-            <li key={t} className="s-card" style={{ padding: "clamp(10px,1.1cqw,16px)" }}>
-              <span className="s-num block text-[#2a8150]" style={{ fontSize: "clamp(18px,2.2cqw,32px)" }}>
-                {i + 1}
-              </span>
-              <span className="s-body mt-[0.4cqw] block font-semibold">{t}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    ),
-  },
-  {
-    id: "rotina",
-    ch: 8,
-    title: "Uma rotina mensal",
-    keywords: "rotina mensal ciclo visita ficha conferência resultado conteúdo",
-    tone: "dark",
-    render: () => (
-      <div className="s-stack h-full justify-center">
-        <Head k="Ritmo do projeto" t={<>Um mês típico no <em>Bento</em></>} />
-        <Flow
-          steps={[
-            { i: Repeat, t: "Gerar rotinas", d: "início do mês" },
-            { i: CalendarCheck, t: "Visitar", d: "e preencher fichas" },
-            { i: UserCheck, t: "Conferir", d: "em dupla" },
-            { i: Sprout, t: "Resultados", d: "validados pelo responsável" },
-            { i: Newspaper, t: "Conteúdos", d: "pautas e boletim" },
-            { i: BarChart3, t: "Indicadores", d: "fechamento do mês" },
-          ]}
-        />
-      </div>
-    ),
-  },
-  {
-    id: "fim",
-    ch: 8,
-    title: "Vamos começar",
-    keywords: "encerramento acesso login contato",
-    tone: "lime",
-    render: () => (
-      <div className="flex h-full flex-col justify-between gap-[3cqw]">
-        <Arcs className="-bottom-[12cqw] -right-[10cqw] h-[64cqw] w-[64cqw]" color="#ffffff" opacity={0.35} />
-        <div className="rise flex items-center gap-[1cqw]">
-          <BentoMark className="h-[4.4cqw] min-h-10 w-[4.4cqw] min-w-10" gap="#a7d572" />
-          <span className="s-small font-semibold tracking-[0.2em]">BENTO · ENTOMO AGRO 360</span>
-        </div>
-        <div className="s-stack">
-          <p className="s-hero rise">
-            Pesquisa organizada,
-            <br />
-            divulgação <em>com confiança</em>.
-          </p>
-          <p className="s-lead rise max-w-[60cqw]">Acesse com o link do seu convite. Dúvidas sobre papéis e fluxos? O Guia de uso dentro da plataforma acompanha você em cada tela.</p>
-        </div>
-        <div className="rise flex flex-wrap items-center gap-[1.4cqw]">
-          <Link href="/login" className="inline-flex items-center gap-[0.6cqw] rounded-full bg-[#0a2e1d] px-[2cqw] py-[1cqw] s-body font-semibold text-white">
-            Acessar o Bento <ArrowRight aria-hidden className="h-[1.2em] w-[1.2em]" />
-          </Link>
-          <span className="s-small inline-flex items-center gap-[0.4cqw] font-semibold">
-            <BookOpen aria-hidden className="h-[1.2em] w-[1.2em]" /> Guia de uso dentro da plataforma
-          </span>
-          <span className="s-small inline-flex items-center gap-[0.4cqw] font-semibold">
-            <Lightbulb aria-hidden className="h-[1.2em] w-[1.2em]" /> Situação institucional: em alinhamento
-          </span>
-        </div>
-      </div>
-    ),
-  },
+  { id: "bento", title: "Bento", tone: "dark", render: () => <Cover /> },
+  { id: "problema", title: "O problema", tone: "light", render: () => <Problem /> },
+  { id: "solucao", title: "A solução", tone: "dark", render: () => <Solution /> },
+  { id: "experimentos", title: "Gestão de experimentos", tone: "light", render: () => <Experiments /> },
+  { id: "campo", title: "Acompanhamento de campo", tone: "dark", render: () => <FieldWork /> },
+  { id: "revisao", title: "Segurança e revisão científica", tone: "light", render: () => <Review /> },
+  { id: "indicadores", title: "Indicadores e gestão", tone: "dark", render: () => <Indicators /> },
+  { id: "publicos", title: "Públicos e aplicações", tone: "light", render: () => <Audiences /> },
+  { id: "demonstracao", title: "Demonstração", tone: "dark", render: () => <Demo /> },
+  { id: "contato", title: "Agende uma demonstração", tone: "lime", render: () => <Closing /> },
 ];
 
-// ---------------------------------------------------------------------------
-// Trilhas personalizadas, mural e quiz
-// ---------------------------------------------------------------------------
-export const ROLES = [
-  { id: "estudante", label: "Estudante / equipe", d: "Vou cadastrar, visitar e registrar", icon: Users },
-  { id: "pesquisador", label: "Pesquisador(a)", d: "Quero acompanhar e validar meus estudos", icon: Microscope },
-  { id: "coordenacao", label: "Coordenação / orientador", d: "Acompanho o projeto e autorizo publicações", icon: GraduationCap },
-  { id: "gestao", label: "Administração", d: "Cuido de acessos e configurações", icon: Settings },
-  { id: "visitante", label: "Só quero conhecer", d: "Uma visão geral rápida", icon: Eye },
-] as const;
-export type RoleId = (typeof ROLES)[number]["id"];
-
-const ESSENTIAL: Record<RoleId, string[]> = {
-  estudante: ["capa", "o-que-e", "principios", "papeis", "experimentos", "coordenadas", "visitas", "ficha", "atividades", "resultados", "biblioteca", "tres-chaves", "celular", "rotina", "fim"],
-  pesquisador: ["capa", "o-que-e", "nao-e", "acesso", "experimentos", "ficha", "resultados", "tres-chaves", "versao", "privacidade", "fim"],
-  coordenacao: ["capa", "projeto", "o-que-e", "papeis", "visao-geral", "tres-chaves", "versao", "boletins", "dossie", "portal", "indicadores", "linha-do-tempo", "equipe", "fim"],
-  gestao: ["capa", "o-que-e", "papeis", "acesso", "equipe", "seguranca", "privacidade", "portal", "primeiros-passos", "fim"],
-  visitante: ["capa", "projeto", "desafio", "o-que-e", "nao-e", "mapa-modulos", "tres-chaves", "portal", "fim"],
-};
-const CHAPTERS_BY_ROLE: Record<RoleId, number[]> = {
-  estudante: [1, 2, 3, 4, 8],
-  pesquisador: [1, 2, 4, 5, 7],
-  coordenacao: [1, 2, 5, 6, 7],
-  gestao: [1, 2, 6, 7, 8],
-  visitante: [1, 3, 5],
-};
-
-export function buildTrail(role: RoleId, mode: "rapida" | "detalhada"): number[] {
-  const idx = (id: string) => SLIDES.findIndex((s) => s.id === id);
-  if (mode === "rapida") return ESSENTIAL[role].map(idx).filter((i) => i >= 0);
-  const chs = new Set(CHAPTERS_BY_ROLE[role]);
-  return SLIDES.map((s, i) => ({ s, i }))
-    .filter(({ s }) => s.id === "capa" || s.id === "indice" || s.id === "fim" || chs.has(s.ch))
-    .map(({ i }) => i);
-}
-
-export const MURAL: { tema: string; sem: string; com: string; i: typeof Sprout }[] = [
-  { tema: "Cadastro", sem: "Cada experimento numa planilha diferente, com nomes que mudam.", com: "Código EA360 único, vinculado ao código institucional e com histórico.", i: FlaskConical },
-  { tema: "Localização", sem: "“É no talhão perto da estrada” — e ninguém acha a parcela.", com: "Coordenadas com GPS em um toque, mapa e “Como chegar”.", i: MapPin },
-  { tema: "Visitas", sem: "Anotações soltas, sem saber quem informou o quê.", com: "Ficha por experimento: relato do pesquisador separado da observação da equipe.", i: CalendarCheck },
-  { tema: "Fotos", sem: "Imagens no celular, sem legenda nem autorização.", com: "Biblioteca privada com legenda, autoria e autorização por canal.", i: Camera },
-  { tema: "Resultados", sem: "Números circulando antes de o pesquisador conferir.", com: "Registro descritivo, conferido e validado pelo responsável.", i: Sprout },
-  { tema: "Aprovação", sem: "“Pode publicar” numa mensagem — sem saber de qual versão.", com: "Três chaves registradas por versão imutável, com data e responsável.", i: ClipboardCheck },
-  { tema: "Boletim", sem: "Montado na última hora, copiando trechos de vários lugares.", com: "Seções a partir do que foi validado e PDF final com hash.", i: Newspaper },
-  { tema: "Acompanhamento", sem: "Não dá para saber o que está atrasado.", com: "Painel com pendências, agenda e registros devidos no mês.", i: Timer },
-];
-
-export const QUIZ: { q: string; opts: string[]; a: number; why: string }[] = [
-  {
-    q: "Uma estudante escreveu um texto para o boletim. Ela mesma pode liberá-lo para publicação?",
-    opts: ["Sim, se estiver revisado", "Não: a conferência e a liberação são feitas por outras pessoas", "Sim, se for administradora"],
-    a: 1,
-    why: "Quem redige uma versão não confere nem libera. E administração não concede aprovação.",
-  },
-  {
-    q: "Quem faz a validação científica de um resultado?",
-    opts: ["A coordenação", "Qualquer pesquisador da organização", "O responsável pelo experimento (ou revisor delegado)"],
-    a: 2,
-    why: "Validação científica depende do vínculo com o estudo — não do cargo.",
-  },
-  {
-    q: "O pesquisador não informou a data de início. O que registrar?",
-    opts: ["Estimar uma data próxima", "Deixar em branco (“Não informado”)", "Usar a data da visita"],
-    a: 1,
-    why: "Dados científicos nunca são completados por estimativa.",
-  },
-  {
-    q: "Um texto já aprovado foi editado depois. O que acontece?",
-    opts: ["Nada, a aprovação continua valendo", "Volta para rascunho e precisa de nova revisão", "É publicado automaticamente"],
-    a: 1,
-    why: "A aprovação vale para uma versão exata. Mudou o texto, recomeça o ciclo.",
-  },
-  {
-    q: "As coordenadas de um experimento aparecem no portal público?",
-    opts: ["Sim, sempre", "Só se o experimento estiver publicado", "Não: são de uso interno"],
-    a: 2,
-    why: "Coordenadas ajudam a equipe a achar o experimento, mas nunca entram em material público.",
-  },
-  {
-    q: "Gerar o PDF final do boletim significa que ele foi publicado?",
-    opts: ["Sim", "Não: a publicação é registrada à parte, com canal, data e link", "Só se for enviado por e-mail"],
-    a: 1,
-    why: "“Publicado” exige confirmação explícita de quem divulgou, onde e quando.",
-  },
-];
-
-export const MINUTES_PER_SLIDE = 0.45;
+export const DURATION = "7 a 9 min";
