@@ -2,11 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Deck } from "./deck";
 import "./deck.css";
 
-// Página pública (fora de /app, sem login): apresentação comercial com telas ilustrativas e dados fictícios.
-// Nenhum dado do banco é lido aqui.
+// Página pública (fora de /app, sem login): só conteúdo explicativo e exemplos ilustrativos, nenhum dado do banco.
 export const metadata: Metadata = {
-  title: "Bento · Gestão de pesquisas e experimentos",
-  description: "Conheça o Bento: organize estudos, acompanhe visitas e atividades e mantenha as informações da sua equipe de pesquisa centralizadas.",
+  title: "Apresentação do Bento",
+  description: "Como funciona o Bento, a plataforma de gestão científica do Entomo Agro 360: funções, papéis, fluxos de revisão e publicação.",
   robots: { index: false, follow: false },
 };
 
