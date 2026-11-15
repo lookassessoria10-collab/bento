@@ -15,7 +15,11 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
-    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts"
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "demo:dry-run": "tsx scripts/importar-demo-bento.ts --modo dry-run",
+    "demo:apply": "tsx scripts/importar-demo-bento.ts --modo apply",
+    "demo:verify": "tsx scripts/importar-demo-bento.ts --modo verify",
+    "demo:rollback": "tsx scripts/importar-demo-bento.ts --modo rollback-demo"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

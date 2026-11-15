@@ -42,3 +42,11 @@ Regras fixas:
 - `tests/integration/workflow.test.ts` — quem pode conferir/validar/liberar/publicar/revogar, inclusive regressões de NULL.
 - `tests/integration/storage.test.ts` — leitura de arquivos segue a permissão do registro.
 - `tests/e2e/smoke.spec.ts` — todas as páginas para 5 papéis sem erros.
+- `tests/integration/demo.test.ts` — organização de demonstração: contagens, idempotência, isolamento (leitura, contagem, arquivos, anônimos), premissas editáveis só na demo, marcador protegido, remoção exclusiva.
+- `tests/e2e/demo.spec.ts` — jornada do gestor na demonstração e regressão das apresentações públicas.
+
+## Painel do gestor e demonstração
+
+- `gestao.painel` (administração, coordenação): `/app/gestao`, relatório gerencial e CSV do painel (CSV também exige `relatorios.exportar_interno`). Os dados vêm das mesmas consultas sob RLS.
+- `gestao.premissas_demo` (administração, coordenação): editar as premissas da estimativa de tempo **apenas** na organização de demonstração. O banco repete a regra (política `time_assumptions_update`, gatilho `t_time_assumptions_demo` e grant só nas colunas numéricas).
+- Nenhuma permissão existente foi ampliada. Ver [demonstracao.md](demonstracao.md).

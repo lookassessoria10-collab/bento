@@ -57,12 +57,14 @@ import {
   updateExperimentMember,
   updateMilestone,
 } from "../actions";
+import { Acompanhamento } from "./acompanhamento";
 
 export const metadata: Metadata = { title: "Experimento" };
 type ExpRow = Database["public"]["Tables"]["experiments"]["Row"];
 
 const TABS = [
   ["resumo", "Resumo"],
+  ["acompanhamento", "Evolução e ocorrências"],
   ["metodologia", "Metodologia"],
   ["linha-do-tempo", "Linha do tempo"],
   ["visitas", "Visitas"],
@@ -219,6 +221,7 @@ export default async function ExperimentPage({ params, searchParams }: PageProps
         </div>
       )}
 
+      {tab === "acompanhamento" && <Acompanhamento ctx={ctx} e={e} />}
       {tab === "metodologia" && <Methodology id={id} e={e} canWrite={canWrite} />}
       {tab === "linha-do-tempo" && <Timeline id={id} canWrite={canWrite} />}
       {tab === "visitas" && <VisitsTab id={id} />}

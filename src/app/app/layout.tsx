@@ -23,6 +23,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
 
   const nav: NavItem[] = [
     { href: "/app", label: "Visão geral", icon: "dashboard" },
+    ...(has(ctx, "gestao.painel") ? [{ href: "/app/gestao", label: "Painel do gestor", icon: "gestao" } as NavItem] : []),
     { href: "/app/experimentos", label: "Experimentos", icon: "experimentos" },
     { href: "/app/visitas", label: "Visitas e acompanhamento", icon: "visitas" },
     { href: "/app/atividades", label: "Atividades e pendências", icon: "atividades" },
@@ -43,6 +44,7 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
       orgNome={ctx.orgNome}
       assinatura={ctx.settings?.assinatura ?? "Gestão científica | Entomo Agro 360"}
       unread={unread ?? 0}
+      demo={ctx.orgIsDemo}
     >
       <Suspense>
         <Flash />

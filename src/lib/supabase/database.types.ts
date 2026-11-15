@@ -229,6 +229,32 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     }
                   ]
+                },"demo_time_assumptions": {
+                  Row: {
+                    "atividade": string,"created_at": string,"eventos_mes": number,"id": string,"minutos_antes": number,"minutos_bento": number,"ordem": number,"organization_id": string,"premissa": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "atividade": string,"created_at"?: string,"eventos_mes": number,"id"?: string,"minutos_antes": number,"minutos_bento": number,"ordem"?: number,"organization_id": string,"premissa"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "atividade"?: string,"created_at"?: string,"eventos_mes"?: number,"id"?: string,"minutos_antes"?: number,"minutos_bento"?: number,"ordem"?: number,"organization_id"?: string,"premissa"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "demo_time_assumptions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "demo_time_assumptions_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"dossier_experiments": {
                   Row: {
                     "dossier_id": string,"experiment_id": string,"incluir_resultados": boolean,"ordem": number,"organization_id": string
@@ -421,6 +447,58 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"experiment_incidents": {
+                  Row: {
+                    "consequencia": string | null,"created_at": string,"descricao": string | null,"detectada_em": string,"experiment_id": string,"gravidade": string,"id": string,"is_demo": boolean,"organization_id": string,"providencia": string | null,"proxima_verificacao": string | null,"resolvida_em": string | null,"responsavel_descricao": string | null,"status": string,"titulo": string,"updated_at": string,"visit_record_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consequencia"?: string | null,"created_at"?: string,"descricao"?: string | null,"detectada_em": string,"experiment_id": string,"gravidade": string,"id"?: string,"is_demo"?: boolean,"organization_id": string,"providencia"?: string | null,"proxima_verificacao"?: string | null,"resolvida_em"?: string | null,"responsavel_descricao"?: string | null,"status"?: string,"titulo": string,"updated_at"?: string,"visit_record_id"?: string | null
+                  }
+                  Update: {
+                    "consequencia"?: string | null,"created_at"?: string,"descricao"?: string | null,"detectada_em"?: string,"experiment_id"?: string,"gravidade"?: string,"id"?: string,"is_demo"?: boolean,"organization_id"?: string,"providencia"?: string | null,"proxima_verificacao"?: string | null,"resolvida_em"?: string | null,"responsavel_descricao"?: string | null,"status"?: string,"titulo"?: string,"updated_at"?: string,"visit_record_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "experiment_incidents_experiment_id_organization_id_fkey"
+      columns: ["experiment_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "experiments"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "experiment_incidents_visit_record_id_organization_id_fkey"
+      columns: ["visit_record_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "visit_records"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"experiment_measurements": {
+                  Row: {
+                    "created_at": string,"data_medicao": string,"experiment_id": string,"fonte": string | null,"id": string,"is_demo": boolean,"motivo_ausencia": string | null,"ordem": number,"organization_id": string,"unidade": string | null,"updated_at": string,"valor": number | null,"variavel": string,"visit_record_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"data_medicao": string,"experiment_id": string,"fonte"?: string | null,"id"?: string,"is_demo"?: boolean,"motivo_ausencia"?: string | null,"ordem"?: number,"organization_id": string,"unidade"?: string | null,"updated_at"?: string,"valor"?: number | null,"variavel": string,"visit_record_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"data_medicao"?: string,"experiment_id"?: string,"fonte"?: string | null,"id"?: string,"is_demo"?: boolean,"motivo_ausencia"?: string | null,"ordem"?: number,"organization_id"?: string,"unidade"?: string | null,"updated_at"?: string,"valor"?: number | null,"variavel"?: string,"visit_record_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "experiment_measurements_experiment_id_organization_id_fkey"
+      columns: ["experiment_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "experiments"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "experiment_measurements_visit_record_id_organization_id_fkey"
+      columns: ["visit_record_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "visit_records"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"experiment_members": {
                   Row: {
                     "acesso": Database["public"]['Enums']["experiment_access"],"ativo": boolean,"created_at": string,"created_by": string | null,"experiment_id": string,"funcao": string | null,"id": string,"organization_id": string,"person_id": string | null,"user_id": string | null
@@ -479,6 +557,26 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     }
                   ]
+                },"experiment_plot_readings": {
+                  Row: {
+                    "bloco": number | null,"created_at": string,"data_leitura": string | null,"experiment_id": string,"id": string,"is_demo": boolean,"motivo_ausencia": string | null,"natureza": string,"organization_id": string,"parcela": string,"tratamento": string | null,"unidade": string | null,"valor": number | null,"variavel": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bloco"?: number | null,"created_at"?: string,"data_leitura"?: string | null,"experiment_id": string,"id"?: string,"is_demo"?: boolean,"motivo_ausencia"?: string | null,"natureza"?: string,"organization_id": string,"parcela": string,"tratamento"?: string | null,"unidade"?: string | null,"valor"?: number | null,"variavel": string
+                  }
+                  Update: {
+                    "bloco"?: number | null,"created_at"?: string,"data_leitura"?: string | null,"experiment_id"?: string,"id"?: string,"is_demo"?: boolean,"motivo_ausencia"?: string | null,"natureza"?: string,"organization_id"?: string,"parcela"?: string,"tratamento"?: string | null,"unidade"?: string | null,"valor"?: number | null,"variavel"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "experiment_plot_readings_experiment_id_organization_id_fkey"
+      columns: ["experiment_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "experiments"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
                 },"experiment_treatments": {
                   Row: {
                     "codigo": string | null,"created_at": string,"descricao": string,"experiment_id": string,"fonte": string | null,"id": string,"ordem": number,"organization_id": string
@@ -501,14 +599,14 @@ isOneToOne: false
                   ]
                 },"experiments": {
                   Row: {
-                    "acompanhamento_ativo": boolean,"alvos_biologicos": (string)[],"archived_at": string | null,"archived_by": string | null,"area_tematica": string | null,"calendario_avaliacoes": string | null,"codigo": string,"codigo_institucional": string | null,"codigo_seq": number,"created_at": string,"created_by": string | null,"culturas": (string)[],"data_conferencia": string | null,"data_informacao": string | null,"data_inicio": string | null,"data_termino_efetiva": string | null,"data_termino_prevista": string | null,"delineamento": string | null,"descricao": string | null,"disponibilidade": Database["public"]['Enums']["info_status"],"farm_area_id": string | null,"farm_id": string | null,"fase": Database["public"]['Enums']["experiment_phase"],"fonte_cadastro": string | null,"id": string,"import_batch_id": string | null,"informante": string | null,"is_demo": boolean,"justificativa": string | null,"linhas_pesquisa": (string)[],"local_descricao": string | null,"latitude": number | null,"longitude": number | null,"coordenadas_fonte": string | null,"motivo_interrupcao": string | null,"nivel_acesso": Database["public"]['Enums']["access_level"],"num_repeticoes": number | null,"objetivo_geral": string | null,"objetivos_especificos": string | null,"observacoes_escopo": string | null,"organismos": (string)[],"organization_id": string,"palavras_chave": (string)[],"periodicidade_acompanhamento": string,"pesquisador_principal_id": string | null,"protocolo_referencia": string | null,"resumo_metodologico": string | null,"search": unknown,"titulo": string,"titulo_curto": string | null,"unidades_experimentais": string | null,"updated_at": string,"updated_by": string | null
+                    "acompanhamento_ativo": boolean,"alvos_biologicos": (string)[],"archived_at": string | null,"archived_by": string | null,"area_tematica": string | null,"calendario_avaliacoes": string | null,"codigo": string,"codigo_institucional": string | null,"codigo_seq": number,"coordenadas_fonte": string | null,"created_at": string,"created_by": string | null,"culturas": (string)[],"data_conferencia": string | null,"data_informacao": string | null,"data_inicio": string | null,"data_termino_efetiva": string | null,"data_termino_prevista": string | null,"delineamento": string | null,"demo_meta": Json | null,"descricao": string | null,"disponibilidade": Database["public"]['Enums']["info_status"],"farm_area_id": string | null,"farm_id": string | null,"fase": Database["public"]['Enums']["experiment_phase"],"fonte_cadastro": string | null,"id": string,"import_batch_id": string | null,"informante": string | null,"is_demo": boolean,"justificativa": string | null,"latitude": number | null,"linhas_pesquisa": (string)[],"local_descricao": string | null,"longitude": number | null,"motivo_interrupcao": string | null,"nivel_acesso": Database["public"]['Enums']["access_level"],"num_repeticoes": number | null,"objetivo_geral": string | null,"objetivos_especificos": string | null,"observacoes_escopo": string | null,"organismos": (string)[],"organization_id": string,"palavras_chave": (string)[],"periodicidade_acompanhamento": string,"pesquisador_principal_id": string | null,"protocolo_referencia": string | null,"resumo_metodologico": string | null,"search": unknown,"titulo": string,"titulo_curto": string | null,"unidades_experimentais": string | null,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "acompanhamento_ativo"?: boolean,"alvos_biologicos"?: (string)[],"archived_at"?: string | null,"archived_by"?: string | null,"area_tematica"?: string | null,"calendario_avaliacoes"?: string | null,"codigo": string,"codigo_institucional"?: string | null,"codigo_seq": number,"created_at"?: string,"created_by"?: string | null,"culturas"?: (string)[],"data_conferencia"?: string | null,"data_informacao"?: string | null,"data_inicio"?: string | null,"data_termino_efetiva"?: string | null,"data_termino_prevista"?: string | null,"delineamento"?: string | null,"descricao"?: string | null,"disponibilidade"?: Database["public"]['Enums']["info_status"],"farm_area_id"?: string | null,"farm_id"?: string | null,"fase"?: Database["public"]['Enums']["experiment_phase"],"fonte_cadastro"?: string | null,"id"?: string,"import_batch_id"?: string | null,"informante"?: string | null,"is_demo"?: boolean,"justificativa"?: string | null,"linhas_pesquisa"?: (string)[],"local_descricao"?: string | null,"latitude"?: number | null,"longitude"?: number | null,"coordenadas_fonte"?: string | null,"motivo_interrupcao"?: string | null,"nivel_acesso"?: Database["public"]['Enums']["access_level"],"num_repeticoes"?: number | null,"objetivo_geral"?: string | null,"objetivos_especificos"?: string | null,"observacoes_escopo"?: string | null,"organismos"?: (string)[],"organization_id": string,"palavras_chave"?: (string)[],"periodicidade_acompanhamento"?: string,"pesquisador_principal_id"?: string | null,"protocolo_referencia"?: string | null,"resumo_metodologico"?: string | null,"search"?: never,"titulo": string,"titulo_curto"?: string | null,"unidades_experimentais"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                    "acompanhamento_ativo"?: boolean,"alvos_biologicos"?: (string)[],"archived_at"?: string | null,"archived_by"?: string | null,"area_tematica"?: string | null,"calendario_avaliacoes"?: string | null,"codigo": string,"codigo_institucional"?: string | null,"codigo_seq": number,"coordenadas_fonte"?: string | null,"created_at"?: string,"created_by"?: string | null,"culturas"?: (string)[],"data_conferencia"?: string | null,"data_informacao"?: string | null,"data_inicio"?: string | null,"data_termino_efetiva"?: string | null,"data_termino_prevista"?: string | null,"delineamento"?: string | null,"demo_meta"?: Json | null,"descricao"?: string | null,"disponibilidade"?: Database["public"]['Enums']["info_status"],"farm_area_id"?: string | null,"farm_id"?: string | null,"fase"?: Database["public"]['Enums']["experiment_phase"],"fonte_cadastro"?: string | null,"id"?: string,"import_batch_id"?: string | null,"informante"?: string | null,"is_demo"?: boolean,"justificativa"?: string | null,"latitude"?: number | null,"linhas_pesquisa"?: (string)[],"local_descricao"?: string | null,"longitude"?: number | null,"motivo_interrupcao"?: string | null,"nivel_acesso"?: Database["public"]['Enums']["access_level"],"num_repeticoes"?: number | null,"objetivo_geral"?: string | null,"objetivos_especificos"?: string | null,"observacoes_escopo"?: string | null,"organismos"?: (string)[],"organization_id": string,"palavras_chave"?: (string)[],"periodicidade_acompanhamento"?: string,"pesquisador_principal_id"?: string | null,"protocolo_referencia"?: string | null,"resumo_metodologico"?: string | null,"search"?: never,"titulo": string,"titulo_curto"?: string | null,"unidades_experimentais"?: string | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "acompanhamento_ativo"?: boolean,"alvos_biologicos"?: (string)[],"archived_at"?: string | null,"archived_by"?: string | null,"area_tematica"?: string | null,"calendario_avaliacoes"?: string | null,"codigo"?: string,"codigo_institucional"?: string | null,"codigo_seq"?: number,"created_at"?: string,"created_by"?: string | null,"culturas"?: (string)[],"data_conferencia"?: string | null,"data_informacao"?: string | null,"data_inicio"?: string | null,"data_termino_efetiva"?: string | null,"data_termino_prevista"?: string | null,"delineamento"?: string | null,"descricao"?: string | null,"disponibilidade"?: Database["public"]['Enums']["info_status"],"farm_area_id"?: string | null,"farm_id"?: string | null,"fase"?: Database["public"]['Enums']["experiment_phase"],"fonte_cadastro"?: string | null,"id"?: string,"import_batch_id"?: string | null,"informante"?: string | null,"is_demo"?: boolean,"justificativa"?: string | null,"linhas_pesquisa"?: (string)[],"local_descricao"?: string | null,"latitude"?: number | null,"longitude"?: number | null,"coordenadas_fonte"?: string | null,"motivo_interrupcao"?: string | null,"nivel_acesso"?: Database["public"]['Enums']["access_level"],"num_repeticoes"?: number | null,"objetivo_geral"?: string | null,"objetivos_especificos"?: string | null,"observacoes_escopo"?: string | null,"organismos"?: (string)[],"organization_id"?: string,"palavras_chave"?: (string)[],"periodicidade_acompanhamento"?: string,"pesquisador_principal_id"?: string | null,"protocolo_referencia"?: string | null,"resumo_metodologico"?: string | null,"search"?: never,"titulo"?: string,"titulo_curto"?: string | null,"unidades_experimentais"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                    "acompanhamento_ativo"?: boolean,"alvos_biologicos"?: (string)[],"archived_at"?: string | null,"archived_by"?: string | null,"area_tematica"?: string | null,"calendario_avaliacoes"?: string | null,"codigo"?: string,"codigo_institucional"?: string | null,"codigo_seq"?: number,"coordenadas_fonte"?: string | null,"created_at"?: string,"created_by"?: string | null,"culturas"?: (string)[],"data_conferencia"?: string | null,"data_informacao"?: string | null,"data_inicio"?: string | null,"data_termino_efetiva"?: string | null,"data_termino_prevista"?: string | null,"delineamento"?: string | null,"demo_meta"?: Json | null,"descricao"?: string | null,"disponibilidade"?: Database["public"]['Enums']["info_status"],"farm_area_id"?: string | null,"farm_id"?: string | null,"fase"?: Database["public"]['Enums']["experiment_phase"],"fonte_cadastro"?: string | null,"id"?: string,"import_batch_id"?: string | null,"informante"?: string | null,"is_demo"?: boolean,"justificativa"?: string | null,"latitude"?: number | null,"linhas_pesquisa"?: (string)[],"local_descricao"?: string | null,"longitude"?: number | null,"motivo_interrupcao"?: string | null,"nivel_acesso"?: Database["public"]['Enums']["access_level"],"num_repeticoes"?: number | null,"objetivo_geral"?: string | null,"objetivos_especificos"?: string | null,"observacoes_escopo"?: string | null,"organismos"?: (string)[],"organization_id"?: string,"palavras_chave"?: (string)[],"periodicidade_acompanhamento"?: string,"pesquisador_principal_id"?: string | null,"protocolo_referencia"?: string | null,"resumo_metodologico"?: string | null,"search"?: never,"titulo"?: string,"titulo_curto"?: string | null,"unidades_experimentais"?: string | null,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -895,14 +993,14 @@ isOneToOne: false
                   ]
                 },"organizations": {
                   Row: {
-                    "created_at": string,"id": string,"nome": string,"slug": string,"status_institucional": string,"timezone": string,"updated_at": string
+                    "created_at": string,"id": string,"is_demo": boolean,"nome": string,"slug": string,"status_institucional": string,"timezone": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"nome": string,"slug": string,"status_institucional"?: string,"timezone"?: string,"updated_at"?: string
+                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"nome": string,"slug": string,"status_institucional"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"nome"?: string,"slug"?: string,"status_institucional"?: string,"timezone"?: string,"updated_at"?: string
+                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"nome"?: string,"slug"?: string,"status_institucional"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -1558,6 +1656,9 @@ isOneToOne: false
             "accept_invitation":
 { Args: { "p_token": string }; Returns: string
                            },
+"demo_purge_organization":
+{ Args: { "p_org": string }; Returns: Json
+                           },
 "generate_recurring_tasks":
 { Args: { "p_mes": string,"p_org": string }; Returns: number
                            },
@@ -1605,7 +1706,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "access_level": "privado_equipe"|"colaboradores"|"preparado_revisao","analysis_status": "nao_disponivel"|"em_analise"|"preliminar"|"final"|"nao_informada","approval_decision": "aprovado"|"ajustes"|"rejeitado"|"revogado","approval_stage": "conferencia"|"validacao_cientifica"|"revisao_final","channel": "interno"|"boletim"|"dossie"|"instagram"|"portal"|"outro","editorial_kind": "pauta"|"instagram"|"boletim"|"dossie"|"relatorio_piloto"|"institucional","experiment_access": "proprietario"|"colaborador"|"revisor"|"visualizador","experiment_phase": "implantacao"|"andamento"|"concluido"|"interrompido","file_kind": "foto"|"relatorio"|"planilha"|"protocolo"|"mapa"|"documento_institucional"|"autorizacao"|"material_editorial"|"pdf_boletim"|"dossie"|"referencia_externa","info_status": "fornecido"|"pendente_conferencia"|"nao_informado"|"a_confirmar","member_status": "ativo"|"suspenso"|"removido","org_role": "admin"|"coordenacao"|"pesquisador"|"estudante"|"editor"|"leitor","record_status": "rascunho"|"preenchida"|"conferida"|"devolvida"|"finalizada","task_priority": "baixa"|"media"|"alta"|"urgente","task_status": "a_fazer"|"em_andamento"|"aguardando_terceiro"|"concluida"|"cancelada","use_authorization": "nao_autorizado"|"uso_interno"|"divulgacao_autorizada","visit_status": "planejada"|"confirmada"|"realizada"|"adiada"|"cancelada","workflow_status": "rascunho"|"em_conferencia"|"aguardando_validacao"|"devolvido"|"validado"|"aguardando_revisao_final"|"liberado"|"publicado"|"revogado"
+            "access_level": "privado_equipe"|"colaboradores"|"preparado_revisao","analysis_status": "nao_disponivel"|"em_analise"|"preliminar"|"final"|"nao_informada","approval_decision": "aprovado"|"ajustes"|"rejeitado"|"revogado","approval_stage": "conferencia"|"validacao_cientifica"|"revisao_final","channel": "interno"|"boletim"|"dossie"|"instagram"|"portal"|"outro","editorial_kind": "pauta"|"instagram"|"boletim"|"dossie"|"relatorio_piloto"|"institucional","experiment_access": "proprietario"|"colaborador"|"revisor"|"visualizador","experiment_phase": "planejado"|"implantacao"|"andamento"|"concluido"|"interrompido","file_kind": "foto"|"relatorio"|"planilha"|"protocolo"|"mapa"|"documento_institucional"|"autorizacao"|"material_editorial"|"pdf_boletim"|"dossie"|"referencia_externa","info_status": "fornecido"|"pendente_conferencia"|"nao_informado"|"a_confirmar","member_status": "ativo"|"suspenso"|"removido","org_role": "admin"|"coordenacao"|"pesquisador"|"estudante"|"editor"|"leitor","record_status": "rascunho"|"preenchida"|"conferida"|"devolvida"|"finalizada","task_priority": "baixa"|"media"|"alta"|"urgente","task_status": "a_fazer"|"em_andamento"|"aguardando_terceiro"|"concluida"|"cancelada","use_authorization": "nao_autorizado"|"uso_interno"|"divulgacao_autorizada","visit_status": "planejada"|"confirmada"|"realizada"|"adiada"|"cancelada","workflow_status": "rascunho"|"em_conferencia"|"aguardando_validacao"|"devolvido"|"validado"|"aguardando_revisao_final"|"liberado"|"publicado"|"revogado"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1725,7 +1826,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "access_level": ["privado_equipe", "colaboradores", "preparado_revisao"],"analysis_status": ["nao_disponivel", "em_analise", "preliminar", "final", "nao_informada"],"approval_decision": ["aprovado", "ajustes", "rejeitado", "revogado"],"approval_stage": ["conferencia", "validacao_cientifica", "revisao_final"],"channel": ["interno", "boletim", "dossie", "instagram", "portal", "outro"],"editorial_kind": ["pauta", "instagram", "boletim", "dossie", "relatorio_piloto", "institucional"],"experiment_access": ["proprietario", "colaborador", "revisor", "visualizador"],"experiment_phase": ["implantacao", "andamento", "concluido", "interrompido"],"file_kind": ["foto", "relatorio", "planilha", "protocolo", "mapa", "documento_institucional", "autorizacao", "material_editorial", "pdf_boletim", "dossie", "referencia_externa"],"info_status": ["fornecido", "pendente_conferencia", "nao_informado", "a_confirmar"],"member_status": ["ativo", "suspenso", "removido"],"org_role": ["admin", "coordenacao", "pesquisador", "estudante", "editor", "leitor"],"record_status": ["rascunho", "preenchida", "conferida", "devolvida", "finalizada"],"task_priority": ["baixa", "media", "alta", "urgente"],"task_status": ["a_fazer", "em_andamento", "aguardando_terceiro", "concluida", "cancelada"],"use_authorization": ["nao_autorizado", "uso_interno", "divulgacao_autorizada"],"visit_status": ["planejada", "confirmada", "realizada", "adiada", "cancelada"],"workflow_status": ["rascunho", "em_conferencia", "aguardando_validacao", "devolvido", "validado", "aguardando_revisao_final", "liberado", "publicado", "revogado"]
+            "access_level": ["privado_equipe", "colaboradores", "preparado_revisao"],"analysis_status": ["nao_disponivel", "em_analise", "preliminar", "final", "nao_informada"],"approval_decision": ["aprovado", "ajustes", "rejeitado", "revogado"],"approval_stage": ["conferencia", "validacao_cientifica", "revisao_final"],"channel": ["interno", "boletim", "dossie", "instagram", "portal", "outro"],"editorial_kind": ["pauta", "instagram", "boletim", "dossie", "relatorio_piloto", "institucional"],"experiment_access": ["proprietario", "colaborador", "revisor", "visualizador"],"experiment_phase": ["planejado", "implantacao", "andamento", "concluido", "interrompido"],"file_kind": ["foto", "relatorio", "planilha", "protocolo", "mapa", "documento_institucional", "autorizacao", "material_editorial", "pdf_boletim", "dossie", "referencia_externa"],"info_status": ["fornecido", "pendente_conferencia", "nao_informado", "a_confirmar"],"member_status": ["ativo", "suspenso", "removido"],"org_role": ["admin", "coordenacao", "pesquisador", "estudante", "editor", "leitor"],"record_status": ["rascunho", "preenchida", "conferida", "devolvida", "finalizada"],"task_priority": ["baixa", "media", "alta", "urgente"],"task_status": ["a_fazer", "em_andamento", "aguardando_terceiro", "concluida", "cancelada"],"use_authorization": ["nao_autorizado", "uso_interno", "divulgacao_autorizada"],"visit_status": ["planejada", "confirmada", "realizada", "adiada", "cancelada"],"workflow_status": ["rascunho", "em_conferencia", "aguardando_validacao", "devolvido", "validado", "aguardando_revisao_final", "liberado", "publicado", "revogado"]
           }
         }
 } as const

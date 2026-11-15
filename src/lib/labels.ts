@@ -1,6 +1,7 @@
 // Rótulos em português para os valores enumerados do banco.
 
 export const PHASE_LABELS = {
+  planejado: "Planejado",
   implantacao: "Em implantação",
   andamento: "Em andamento",
   concluido: "Concluído",

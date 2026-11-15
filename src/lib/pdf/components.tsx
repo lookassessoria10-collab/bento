@@ -88,7 +88,9 @@ export function BentoPage({ meta, children }: { meta: DocMeta; children: ReactNo
         </Text>
       )}
       {meta.demo && (
-        <Text style={{ ...s.small, color: C.danger, marginBottom: 6 }}>Contém dados ilustrativos (fictícios) de demonstração.</Text>
+        <Text style={{ ...s.small, color: C.danger, marginBottom: 6 }} fixed>
+          DADOS SIMULADOS — conteúdo fictício de demonstração. Não é resultado, registro ou aprovação real.
+        </Text>
       )}
       {children}
       <View style={s.footer} fixed>

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (!ctx?.orgId) return errorResponse("Não autenticado.", 401);
   const p = reportPeriod(Object.fromEntries(req.nextUrl.searchParams.entries()), ctx.settings?.piloto_inicio ?? null);
   const d = await loadReport(ctx, p);
-  const meta = { titulo: "Indicadores do piloto", identificador: `Indicadores ${fmtDate(p.de)}–${fmtDate(p.ate)}`, geradoPor: ctx.nome, geradoEm: new Date().toISOString(), rascunho: false, assinatura: ctx.settings?.assinatura };
+  const meta = { titulo: "Indicadores do piloto", identificador: `Indicadores ${fmtDate(p.de)}–${fmtDate(p.ate)}`, geradoPor: ctx.nome, geradoEm: new Date().toISOString(), rascunho: false, assinatura: ctx.settings?.assinatura, demo: ctx.orgIsDemo };
   const buf = await renderToBuffer(
     <DocRoot title="Indicadores do piloto">
       <BentoPage meta={meta}>

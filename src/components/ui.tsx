@@ -198,6 +198,7 @@ const STATUS_TONES: Record<string, Tone> = {
   liberado: "brand",
   publicado: "brand",
   revogado: "danger",
+  planejado: "neutral",
   implantacao: "info",
   andamento: "brand",
   concluido: "neutral",

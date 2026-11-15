@@ -71,6 +71,7 @@ export function normalizeKey(s: string) {
 }
 
 const PHASES: Record<string, string> = {
+  planejado: "planejado",
   em_implantacao: "implantacao",
   implantacao: "implantacao",
   em_andamento: "andamento",

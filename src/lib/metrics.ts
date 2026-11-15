@@ -4,7 +4,7 @@ export interface ExperimentForRate {
   id: string;
   acompanhamento_ativo: boolean;
   archived_at: string | null;
-  fase: "implantacao" | "andamento" | "concluido" | "interrompido";
+  fase: "planejado" | "implantacao" | "andamento" | "concluido" | "interrompido";
   data_inicio: string | null;
   data_termino_efetiva: string | null;
   periodicidade_acompanhamento: string;

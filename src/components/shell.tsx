@@ -12,6 +12,8 @@ import {
   ClipboardCheck,
   FlaskConical,
   FolderOpen,
+  Gauge,
+  FlaskRound,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -28,6 +30,7 @@ import { cx } from "@/components/ui";
 
 const ICONS = {
   dashboard: LayoutDashboard,
+  gestao: Gauge,
   experimentos: FlaskConical,
   visitas: CalendarCheck,
   atividades: CheckSquare,
@@ -74,6 +77,7 @@ export function AppShell({
   orgNome,
   assinatura,
   unread,
+  demo = false,
   children,
 }: {
   nav: NavItem[];
@@ -81,6 +85,8 @@ export function AppShell({
   orgNome: string;
   assinatura: string;
   unread: number;
+  /** organização de demonstração: faixa fixa de dados simulados */
+  demo?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -207,7 +213,16 @@ export function AppShell({
               </form>
             </div>
           </div>
+          {demo && (
+            <p role="note" className="border-t border-warning-600/25 bg-warning-100 px-4 py-1.5 text-center text-xs font-bold text-warning-600">
+              <FlaskRound aria-hidden className="mr-1.5 inline h-3.5 w-3.5" />
+              Ambiente de demonstração · Dados simulados
+            </p>
+          )}
         </header>
+        {demo && (
+          <p className="hidden text-center text-xs font-bold print:block">Ambiente de demonstração · Dados simulados</p>
+        )}
 
         <main id="conteudo" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">
           {children}

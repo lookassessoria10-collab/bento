@@ -23,7 +23,7 @@ export function dashboardFilters(sp: Record<string, string | string[] | undefine
     area: s("area").slice(0, 100),
     cultura: s("cultura").slice(0, 60).toLowerCase(),
     responsavel: /^[0-9a-f-]{36}$/.test(s("responsavel")) ? s("responsavel") : "",
-    fase: ["implantacao", "andamento", "concluido", "interrompido"].includes(s("fase")) ? s("fase") : "",
+    fase: ["planejado", "implantacao", "andamento", "concluido", "interrompido"].includes(s("fase")) ? s("fase") : "",
   };
 }
 

@@ -58,7 +58,7 @@ export const list = z.preprocess(
 export const multi = <T extends readonly [string, ...string[]]>(values: T) =>
   z.preprocess((v) => (v == null || v === "" ? [] : Array.isArray(v) ? v : [v]), z.array(z.enum(values)));
 
-export const PHASES = ["implantacao", "andamento", "concluido", "interrompido"] as const;
+export const PHASES = ["planejado", "implantacao", "andamento", "concluido", "interrompido"] as const;
 export const INFO_STATUS = ["fornecido", "pendente_conferencia", "nao_informado", "a_confirmar"] as const;
 export const ACCESS_LEVELS = ["privado_equipe", "colaboradores", "preparado_revisao"] as const;
 export const CHANNELS = ["interno", "boletim", "dossie", "instagram", "portal", "outro"] as const;

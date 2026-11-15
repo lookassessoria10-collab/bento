@@ -3,7 +3,7 @@ import { Image, Page, Text, View } from "@react-pdf/renderer";
 import { BentoPage, C, DocRoot, KV, Mark, Paragraphs, s, type DocMeta } from "./components";
 import { REPORT_FIELDS, type SnapshotContent, type SnapExperiment, type SnapResult } from "@/lib/snapshot";
 
-const PHASE: Record<string, string> = { implantacao: "Em implantação", andamento: "Em andamento", concluido: "Concluído", interrompido: "Interrompido" };
+const PHASE: Record<string, string> = { planejado: "Planejado", implantacao: "Em implantação", andamento: "Em andamento", concluido: "Concluído", interrompido: "Interrompido" };
 const ANALYSIS: Record<string, string> = { nao_disponivel: "Não disponível", em_analise: "Em análise", preliminar: "Preliminar", final: "Final", nao_informada: "Não informada" };
 
 function d(v?: string | null) {

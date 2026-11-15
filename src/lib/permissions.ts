@@ -44,6 +44,10 @@ export const PERMISSIONS = {
   "relatorios.exportar_interno": TEAM,
   "piloto.editar": TEAM,
   "feedback.moderar": TEAM,
+  // painel gerencial da fazenda experimental (leitura agregada sob a mesma RLS)
+  "gestao.painel": ["admin", "coordenacao"],
+  // premissas da estimativa de tempo: editáveis só na organização de demonstração (checado também no banco)
+  "gestao.premissas_demo": ["admin", "coordenacao"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

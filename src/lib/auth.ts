@@ -13,9 +13,11 @@ export interface AppContext {
   orgId: string;
   orgNome: string;
   orgSlug: string;
+  /** organização de demonstração (dados simulados, isolada das reais) */
+  orgIsDemo: boolean;
   roles: Role[];
   editorDelegation: boolean;
-  organizations: { id: string; nome: string }[];
+  organizations: { id: string; nome: string; isDemo: boolean }[];
   settings: {
     nome_projeto: string;
     assinatura: string;
@@ -42,30 +44,31 @@ export const getContext = cache(async (): Promise<AppContext | null> => {
     supabase.from("profiles").select("nome, email, situacao").eq("id", userId).maybeSingle(),
     supabase
       .from("memberships")
-      .select("organization_id, role, delegacao_revisao_final, status, organizations(id, nome, slug)")
+      .select("organization_id, role, delegacao_revisao_final, status, organizations(id, nome, slug, is_demo)")
       .eq("user_id", userId)
       .eq("status", "ativo"),
   ]);
   if (!profile || profile.situacao !== "ativa") return null;
 
-  const orgs = new Map<string, { id: string; nome: string; slug: string }>();
+  const orgs = new Map<string, { id: string; nome: string; slug: string; is_demo: boolean }>();
   for (const m of memberships ?? []) {
-    const o = m.organizations as unknown as { id: string; nome: string; slug: string } | null;
+    const o = m.organizations as unknown as { id: string; nome: string; slug: string; is_demo: boolean } | null;
     if (o) orgs.set(o.id, o);
   }
   const cookieStore = await cookies();
   const preferred = cookieStore.get(ORG_COOKIE)?.value;
-  const org = (preferred && orgs.get(preferred)) || orgs.values().next().value;
+  // sem preferência salva, abre uma organização real antes da demonstração
+  const org = (preferred && orgs.get(preferred)) || [...orgs.values()].sort((a, b) => Number(a.is_demo) - Number(b.is_demo))[0];
 
   const base = {
     supabase,
     userId,
     email: profile.email ?? String(claims?.claims?.email ?? ""),
     nome: profile.nome || profile.email || "Usuário",
-    organizations: Array.from(orgs.values()).map((o) => ({ id: o.id, nome: o.nome })),
+    organizations: Array.from(orgs.values()).map((o) => ({ id: o.id, nome: o.nome, isDemo: o.is_demo })),
   };
   if (!org) {
-    return { ...base, orgId: "", orgNome: "", orgSlug: "", roles: [], editorDelegation: false, settings: null };
+    return { ...base, orgId: "", orgNome: "", orgSlug: "", orgIsDemo: false, roles: [], editorDelegation: false, settings: null };
   }
   const mine = (memberships ?? []).filter((m) => m.organization_id === org.id);
   const { data: settings } = await supabase
@@ -81,6 +84,7 @@ export const getContext = cache(async (): Promise<AppContext | null> => {
     orgId: org.id,
     orgNome: org.nome,
     orgSlug: org.slug,
+    orgIsDemo: org.is_demo,
     roles: mine.map((m) => m.role as Role),
     editorDelegation: mine.some((m) => m.role === "editor" && m.delegacao_revisao_final),
     settings: settings ?? null,
