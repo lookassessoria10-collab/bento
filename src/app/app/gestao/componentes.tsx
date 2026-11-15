@@ -18,7 +18,7 @@ export function DemoSeal({ className }: { className?: string }) {
 
 const uniq = <T,>(xs: T[]) => [...new Set(xs)];
 
-export function FilterForm({ all, f, action }: { all: GData; f: GFilters; action: string }) {
+export function FilterForm({ all, f, action, hidden }: { all: GData; f: GFilters; action: string; hidden?: Record<string, string> }) {
   const E = all.experiments;
   const people = uniq(E.filter((e) => e.responsavel_id).map((e) => `${e.responsavel_id}|${e.responsavel}`)).map((s) => s.split("|"));
   const setores = uniq(E.filter((e) => e.setor_id).map((e) => `${e.setor_id}|${e.setor}`))
@@ -26,6 +26,9 @@ export function FilterForm({ all, f, action }: { all: GData; f: GFilters; action
     .sort((a, b) => a[1].localeCompare(b[1]));
   return (
     <form action={action} role="search" aria-label="Filtrar painel" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
+      {Object.entries(hidden ?? {}).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
       <label className="col-span-1 flex flex-col gap-1 text-xs font-semibold text-muted">
         De
         <Input type="date" name="de" defaultValue={f.de} />

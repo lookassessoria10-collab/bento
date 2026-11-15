@@ -17,7 +17,7 @@ async function ok(page: Page, text: RegExp | string) {
 
 test("1. login e logout reais", async ({ page }) => {
   await login(page, "estudante");
-  await expect(page.getByRole("heading", { name: /Olá, Estudante/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Visão geral", level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Sair" }).click();
   await page.waitForURL(/\/login/);
   await page.goto("/app");

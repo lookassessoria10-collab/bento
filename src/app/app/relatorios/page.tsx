@@ -41,6 +41,31 @@ export default async function ReportsPage({ searchParams }: PageProps<"/app/rela
           </a>
         }
       />
+      {has(ctx, "gestao.painel") && (
+        <Card className="mb-5">
+          <CardHeader title="Relatórios gerenciais" description="Gerados na hora, com filtros e prévia antes de imprimir ou salvar em PDF. Cada um informa período, organização, filtros e origem dos dados." />
+          <CardBody>
+            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["executivo", "Executivo", "Portfólio, status, cronograma, visitas, ocorrências e próximos passos."],
+                ["operacional", "Operacional", "Pendências, prazos e visitas previstas × realizadas."],
+                ["documental", "Revisões e documentos", "Etapas, decisões e tempos de revisão."],
+                ...(ctx.orgIsDemo ? [["comercial", "Demonstrativo comercial", "Somente dados fictícios, com a simulação de tempo e suas premissas."]] : []),
+              ].map(([k, t, desc]) => (
+                <li key={k}>
+                  <Link href={`/app/gestao/relatorio?tipo=${k}`} className="block h-full rounded-xl border border-border p-3 text-sm hover:border-brand-500">
+                    <span className="font-semibold text-brand-800">{t}</span>
+                    <span className="mt-1 block text-xs text-muted">{desc}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-muted">
+              Relatório por ensaio: abra o ensaio e use a aba “Evolução e ocorrências” ou o botão “Ficha PDF” (objetivo, metodologia, cronologia, medições e ocorrências, com fontes e ressalvas).
+            </p>
+          </CardBody>
+        </Card>
+      )}
       <form className="mb-5 flex flex-wrap items-end gap-2" aria-label="Período do relatório">
         <label className="text-xs text-muted">
           De

@@ -48,6 +48,10 @@ export const PERMISSIONS = {
   "gestao.painel": ["admin", "coordenacao"],
   // premissas da estimativa de tempo: editáveis só na organização de demonstração (checado também no banco)
   "gestao.premissas_demo": ["admin", "coordenacao"],
+  // agenda: criar, reagendar, concluir e cancelar compromissos (mesma equipe que gerencia visitas)
+  "agenda.gerenciar": TEAM,
+  // links externos de painéis: criar, substituir e revogar (o banco repete a regra em share_link_*)
+  "compartilhamentos.gerenciar": ["admin", "coordenacao"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

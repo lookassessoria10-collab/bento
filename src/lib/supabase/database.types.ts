@@ -229,6 +229,152 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     }
                   ]
+                },"calendar_events": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"data_prevista": string,"dia_inteiro": boolean,"experiment_id": string | null,"fim": string | null,"historico": NonNullable<Json>,"id": string,"inicio": string | null,"is_demo": boolean,"local_geral": string | null,"motivo_status": string | null,"observacoes": string | null,"organization_id": string,"realizado_em": string | null,"responsavel_descricao": string | null,"responsavel_id": string | null,"status": string,"tipo": string,"titulo": string,"updated_at": string,"updated_by": string | null,"visit_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"data_prevista": string,"dia_inteiro"?: boolean,"experiment_id"?: string | null,"fim"?: string | null,"historico"?: NonNullable<Json>,"id"?: string,"inicio"?: string | null,"is_demo"?: boolean,"local_geral"?: string | null,"motivo_status"?: string | null,"observacoes"?: string | null,"organization_id": string,"realizado_em"?: string | null,"responsavel_descricao"?: string | null,"responsavel_id"?: string | null,"status"?: string,"tipo": string,"titulo": string,"updated_at"?: string,"updated_by"?: string | null,"visit_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"data_prevista"?: string,"dia_inteiro"?: boolean,"experiment_id"?: string | null,"fim"?: string | null,"historico"?: NonNullable<Json>,"id"?: string,"inicio"?: string | null,"is_demo"?: boolean,"local_geral"?: string | null,"motivo_status"?: string | null,"observacoes"?: string | null,"organization_id"?: string,"realizado_em"?: string | null,"responsavel_descricao"?: string | null,"responsavel_id"?: string | null,"status"?: string,"tipo"?: string,"titulo"?: string,"updated_at"?: string,"updated_by"?: string | null,"visit_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "calendar_events_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calendar_events_experiment_id_organization_id_fkey"
+      columns: ["experiment_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "experiments"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "calendar_events_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calendar_events_responsavel_id_fkey"
+      columns: ["responsavel_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calendar_events_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "calendar_events_visit_id_organization_id_fkey"
+      columns: ["visit_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "visit_schedules"
+      referencedColumns: ["id","organization_id"]
+    }
+                  ]
+                },"dashboard_share_access": {
+                  Row: {
+                    "acessos": number,"dia": string,"link_id": string,"organization_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "acessos"?: number,"dia": string,"link_id": string,"organization_id": string
+                  }
+                  Update: {
+                    "acessos"?: number,"dia"?: string,"link_id"?: string,"organization_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dashboard_share_access_link_id_fkey"
+      columns: ["link_id"]
+isOneToOne: false
+      referencedRelation: "dashboard_share_links"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_access_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dashboard_share_audit": {
+                  Row: {
+                    "acao": string,"detalhes": NonNullable<Json>,"em": string,"id": string,"link_id": string,"organization_id": string,"por": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "acao": string,"detalhes"?: NonNullable<Json>,"em"?: string,"id"?: string,"link_id": string,"organization_id": string,"por"?: string | null
+                  }
+                  Update: {
+                    "acao"?: string,"detalhes"?: NonNullable<Json>,"em"?: string,"id"?: string,"link_id"?: string,"organization_id"?: string,"por"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dashboard_share_audit_link_id_fkey"
+      columns: ["link_id"]
+isOneToOne: false
+      referencedRelation: "dashboard_share_links"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_audit_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_audit_por_fkey"
+      columns: ["por"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dashboard_share_links": {
+                  Row: {
+                    "bloqueado_ate": string | null,"config": NonNullable<Json>,"created_at": string,"created_by": string,"expira_em": string,"id": string,"motivo_revogacao": string | null,"nome": string,"organization_id": string,"publico": string,"revogado_em": string | null,"revogado_por": string | null,"senha_hash": string | null,"status": string,"substitui_id": string | null,"tentativas_falhas": number,"token_hash": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bloqueado_ate"?: string | null,"config": NonNullable<Json>,"created_at"?: string,"created_by": string,"expira_em": string,"id"?: string,"motivo_revogacao"?: string | null,"nome": string,"organization_id": string,"publico": string,"revogado_em"?: string | null,"revogado_por"?: string | null,"senha_hash"?: string | null,"status"?: string,"substitui_id"?: string | null,"tentativas_falhas"?: number,"token_hash": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bloqueado_ate"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string,"expira_em"?: string,"id"?: string,"motivo_revogacao"?: string | null,"nome"?: string,"organization_id"?: string,"publico"?: string,"revogado_em"?: string | null,"revogado_por"?: string | null,"senha_hash"?: string | null,"status"?: string,"substitui_id"?: string | null,"tentativas_falhas"?: number,"token_hash"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dashboard_share_links_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_links_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_links_revogado_por_fkey"
+      columns: ["revogado_por"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboard_share_links_substitui_id_fkey"
+      columns: ["substitui_id"]
+isOneToOne: false
+      referencedRelation: "dashboard_share_links"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"demo_time_assumptions": {
                   Row: {
                     "atividade": string,"created_at": string,"eventos_mes": number,"id": string,"minutos_antes": number,"minutos_bento": number,"ordem": number,"organization_id": string,"premissa": string | null,"updated_at": string,"updated_by": string | null
@@ -1688,6 +1834,18 @@ isOneToOne: false
                            },
 "revoke_publication":
 { Args: { "p_errata"?: string,"p_motivo": string,"p_publication": string }; Returns: undefined
+                           },
+"share_link_create":
+{ Args: { "p_config": Json,"p_expira_em": string,"p_nome": string,"p_org": string,"p_origem"?: string,"p_publico": string,"p_senha_hash"?: string,"p_substitui"?: string,"p_token_hash": string }; Returns: string
+                           },
+"share_link_password_result":
+{ Args: { "p_id": string,"p_ok": boolean }; Returns: undefined
+                           },
+"share_link_revoke":
+{ Args: { "p_id": string,"p_motivo"?: string }; Returns: undefined
+                           },
+"share_link_touch":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "submit_feedback":
 { Args: { "p_clareza": number,"p_comentario": string,"p_consentimento": boolean,"p_org_slug": string,"p_origem_hash": string,"p_perfil": string,"p_publication": string,"p_sugestao": string,"p_utilidade": number }; Returns: undefined

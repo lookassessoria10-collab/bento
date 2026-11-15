@@ -24,6 +24,7 @@ import { ActionForm, SubmitButton } from "@/components/client";
 import { Alert, Card, CardBody, CardHeader, EmptyState, Input, PageHeader, Table, Td, Th, buttonClass } from "@/components/ui";
 import { saveTimeAssumptions } from "./actions";
 import { DemoSeal, ExperimentLink, FilterForm, IncidentCard, TimeEconomyTable } from "./componentes";
+import { ModeTabs } from "../painel/componentes";
 
 export const metadata: Metadata = { title: "Painel do gestor" };
 
@@ -58,7 +59,7 @@ export default async function GestaoPage({ searchParams }: PageProps<"/app/gesta
   return (
     <>
       <PageHeader
-        title="Painel do gestor"
+        title="Visão do gestor da fazenda"
         description={
           <>
             Visão da unidade experimental para quem coordena: o que exige atenção, como os ensaios evoluem e o estado dos registros. Referência: {fmtDate(ref)}.
@@ -77,6 +78,7 @@ export default async function GestaoPage({ searchParams }: PageProps<"/app/gesta
           </>
         }
       />
+      <ModeTabs current="gestor" f={f} canGestor />
       {demo && <DemoSeal className="mb-4" />}
 
       <Card className="mb-6 p-4">

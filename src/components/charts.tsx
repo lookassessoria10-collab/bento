@@ -122,7 +122,7 @@ export function LineChart({
     } else cur.push(`${X(p.data).toFixed(1)},${Y(p.valor).toFixed(1)}`);
   }
   if (cur.length) segs.push(cur.join(" "));
-  const ticks = [vmin, (vmin + top) / 2, top].map((v) => Math.round(v * 10) / 10);
+  const ticks = [...new Set([vmin, (vmin + top) / 2, top].map((v) => Math.round(v * 10) / 10))];
   const missing = pontos.filter((p) => p.valor === null);
   return (
     <figure className="min-w-0">

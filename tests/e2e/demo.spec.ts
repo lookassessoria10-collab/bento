@@ -23,7 +23,7 @@ test("gestor percorre painel, filtro de algodão, fichas e relatório", async ({
   await login(page, "demo-gestor");
   await page.goto("/app/gestao");
   await expectHealthy(page);
-  await expect(page.getByText("Ambiente de demonstração · Dados simulados").first()).toBeVisible();
+  await expect(page.getByText("AMBIENTE DE DEMONSTRAÇÃO | DADOS SIMULADOS").first()).toBeVisible();
   await expect(page.getByRole("table", { name: "Ensaios da seleção" }).locator("tbody tr")).toHaveCount(18);
 
   await page.getByLabel("Cultura").selectOption({ label: "Algodão" });
@@ -58,7 +58,7 @@ test("organização real não mostra a demonstração", async ({ page }) => {
   await login(page, "pesquisador");
   await page.goto("/app/experimentos");
   await expect(page.getByText("DEMO-EA360-001")).toHaveCount(0);
-  await expect(page.getByText("Ambiente de demonstração · Dados simulados")).toHaveCount(0);
+  await expect(page.getByText("AMBIENTE DE DEMONSTRAÇÃO | DADOS SIMULADOS")).toHaveCount(0);
   await page.goto("/app/gestao");
   await expect(page).toHaveURL(/\/app\?erro=/); // painel exige coordenação/administração
 });

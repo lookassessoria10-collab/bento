@@ -9,7 +9,7 @@ test("12. interface funcional em viewport de celular (navegação no rodapé)", 
 
   const bottomNav = page.getByRole("navigation", { name: "Navegação principal" });
   await expect(bottomNav).toBeVisible();
-  await bottomNav.getByRole("link", { name: "Visitas" }).click();
+  await bottomNav.getByRole("link", { name: "Acompanhamentos" }).click();
   await page.waitForURL(/\/app\/visitas/);
   await expectHealthy(page);
 
@@ -17,7 +17,7 @@ test("12. interface funcional em viewport de celular (navegação no rodapé)", 
   await bottomNav.getByRole("button", { name: "Mais" }).click();
   const sheet = page.getByRole("dialog", { name: "Mais opções" });
   await expect(sheet).toBeVisible();
-  await sheet.getByRole("link", { name: "Biblioteca" }).click();
+  await sheet.getByRole("link", { name: "Arquivos" }).click();
   await page.waitForURL(/\/app\/biblioteca/);
   await expect(sheet).toHaveCount(0);
   await expectHealthy(page);

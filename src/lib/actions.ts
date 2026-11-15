@@ -5,6 +5,8 @@ export interface ActionResult {
   message: string;
   fieldErrors?: Record<string, string>;
   redirectTo?: string;
+  /** valor exibido UMA vez ao usuário (ex.: link de compartilhamento recém-criado); nunca persistido no cliente */
+  secret?: string;
 }
 
 export class UserError extends Error {}

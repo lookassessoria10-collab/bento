@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   BarChart3,
   Bell,
   BookOpen,
   CalendarCheck,
+  CalendarDays,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Share2,
   CheckSquare,
   ClipboardCheck,
   FlaskConical,
@@ -31,6 +36,8 @@ import { cx } from "@/components/ui";
 const ICONS = {
   dashboard: LayoutDashboard,
   gestao: Gauge,
+  calendario: CalendarDays,
+  compartilhamentos: Share2,
   experimentos: FlaskConical,
   visitas: CalendarCheck,
   atividades: CheckSquare,
@@ -44,20 +51,57 @@ const ICONS = {
   ajuda: BookOpen,
 } as const;
 
+export const NAV_SECTIONS = {
+  geral: "Visão geral",
+  pesquisas: "Pesquisas",
+  gestao: "Gestão",
+  documentos: "Documentos e comunicação",
+  admin: "Administração",
+  ajuda: "Ajuda",
+} as const;
+export type NavSection = keyof typeof NAV_SECTIONS;
+
 export interface NavItem {
   href: string;
   label: string;
   icon: keyof typeof ICONS;
+  section: NavSection;
   badge?: number;
+  /** outras rotas que pertencem a este item (ex.: modos do painel) */
+  match?: string[];
 }
 
 // atalhos da barra inferior (celular/tablet); o restante fica em "Mais"
 const PRIMARY = ["/app", "/app/experimentos", "/app/visitas", "/app/atividades"];
 const SHORT: Record<string, string> = {
-  "/app": "Início",
-  "/app/experimentos": "Experimentos",
-  "/app/visitas": "Visitas",
-  "/app/atividades": "Atividades",
+  "/app": "Painel",
+  "/app/experimentos": "Ensaios",
+  "/app/visitas": "Acompanh.",
+  "/app/atividades": "Pendências",
+};
+
+// menu recolhido (só ícones) no desktop: preferência local do navegador, lida sem divergência de hidratação
+const RAIL_KEY = "bento.nav.recolhido";
+const railSubscribe = (cb: () => void) => {
+  window.addEventListener("storage", cb);
+  window.addEventListener("bento-rail", cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener("bento-rail", cb);
+  };
+};
+const railRead = () => {
+  try {
+    return localStorage.getItem(RAIL_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+const railWrite = (v: boolean) => {
+  try {
+    localStorage.setItem(RAIL_KEY, v ? "1" : "0");
+  } catch {}
+  window.dispatchEvent(new Event("bento-rail"));
 };
 
 function initials(nome: string) {
@@ -102,51 +146,114 @@ export function AppShell({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const isActive = (href: string) => (href === "/app" ? pathname === "/app" : pathname.startsWith(href));
+  const isActive = (item: NavItem | string) => {
+    const href = typeof item === "string" ? item : item.href;
+    const extra = typeof item === "string" ? [] : (item.match ?? []);
+    if (extra.some((m) => pathname.startsWith(m))) return true;
+    return href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+  };
+  const rail = useSyncExternalStore(railSubscribe, railRead, () => false);
+  const current = nav.find((n) => isActive(n));
+  const activeSection = current?.section ?? "geral";
+  // seções abertas: a do item ativo e "Visão geral" por padrão; o usuário alterna as demais
+  const [toggled, setToggled] = useState<Set<NavSection>>(() => new Set());
+  const isOpen = (sec: NavSection) => (sec === activeSection || sec === "geral" || sec === "ajuda") !== toggled.has(sec);
+  const toggle = (sec: NavSection) =>
+    setToggled((prev) => {
+      const n = new Set(prev);
+      if (n.has(sec)) n.delete(sec);
+      else n.add(sec);
+      return n;
+    });
+  const sections = (Object.keys(NAV_SECTIONS) as NavSection[]).map((sec) => ({ sec, items: nav.filter((n) => n.section === sec) })).filter((g) => g.items.length);
   const primary = nav.filter((n) => PRIMARY.includes(n.href));
   const more = nav.filter((n) => !PRIMARY.includes(n.href));
   const moreBadge = more.reduce((a, n) => a + (n.badge ?? 0), 0);
-  const moreActive = more.some((n) => isActive(n.href));
+  const moreActive = more.some((n) => isActive(n));
 
   return (
     <div className="flex min-h-screen">
       {/* ---------------- menu lateral (desktop) ---------------- */}
-      <aside className="no-print sticky top-0 hidden h-screen w-[268px] shrink-0 flex-col bg-gradient-to-b from-brand-900 via-brand-900 to-brand-950 text-white lg:flex">
-        <div className="px-5 pb-5 pt-6">
-          <Link href="/app" aria-label="Bento — visão geral" className="block">
-            <Logo tone="light" assinatura={assinatura} />
+      <aside
+        className={cx(
+          "no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-gradient-to-b from-brand-900 via-brand-900 to-brand-950 text-white transition-[width] duration-200 lg:flex",
+          rail ? "w-[76px]" : "w-[268px]",
+        )}
+      >
+        <div className={cx("flex items-center pb-4 pt-6", rail ? "flex-col gap-3 px-2" : "gap-2 px-5")}>
+          <Link href="/app" aria-label="Bento — painel geral" className="block min-w-0 flex-1">
+            {rail ? <BentoMark className="mx-auto h-9 w-9" gap="#0F4A2E" /> : <Logo tone="light" assinatura={assinatura} />}
           </Link>
+          <button
+            type="button"
+            onClick={() => railWrite(!rail)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
+            aria-label={rail ? "Expandir menu" : "Recolher menu"}
+            title={rail ? "Expandir menu" : "Recolher menu"}
+          >
+            {rail ? <PanelLeftOpen aria-hidden className="h-4 w-4" /> : <PanelLeftClose aria-hidden className="h-4 w-4" />}
+          </button>
         </div>
-        <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto px-3">
-          <ul className="space-y-0.5">
-            {nav.map((item) => {
-              const I = ICONS[item.icon];
-              const active = isActive(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
+        <nav aria-label="Navegação principal" className={cx("flex-1 overflow-y-auto overscroll-contain pb-2", rail ? "px-2" : "px-3")}>
+          {sections.map(({ sec, items }) => {
+            const open = rail || isOpen(sec);
+            const listId = `nav-${sec}`;
+            return (
+              <div key={sec} className={cx("mb-1", rail && sec !== "geral" && "mt-2 border-t border-white/10 pt-2")}>
+                {!rail && sec !== "ajuda" && (
+                  <button
+                    type="button"
+                    onClick={() => toggle(sec)}
+                    aria-expanded={open}
+                    aria-controls={listId}
                     className={cx(
-                      "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all",
-                      active ? "bg-white/[0.12] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]" : "text-white/70 hover:bg-white/[0.06] hover:text-white",
+                      "flex w-full items-center justify-between rounded-lg px-3 pb-1 pt-3 text-left text-[10.5px] font-bold uppercase tracking-[0.12em] transition-colors hover:text-white",
+                      sec === activeSection ? "text-accent-500" : "text-white/45",
                     )}
                   >
-                    {active && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent-500" />}
-                    <I aria-hidden className={cx("h-[18px] w-[18px]", active ? "text-accent-500" : "text-white/55 group-hover:text-white/80")} />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge ? (
-                      <span className="rounded-full bg-accent-500 px-1.5 text-[11px] font-bold text-brand-950 tabular" aria-label={`${item.badge} pendentes`}>
-                        {item.badge}
-                      </span>
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    {NAV_SECTIONS[sec]}
+                    <ChevronDown aria-hidden className={cx("h-3.5 w-3.5 transition-transform", !open && "-rotate-90")} />
+                  </button>
+                )}
+                {open && (
+                  <ul id={listId} className="space-y-0.5">
+                    {items.map((item) => {
+                      const I = ICONS[item.icon];
+                      const active = isActive(item);
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            aria-current={active ? "page" : undefined}
+                            title={rail ? item.label : undefined}
+                            className={cx(
+                              "group relative flex items-center gap-3 rounded-xl py-2.5 text-[13.5px] font-medium transition-all focus-visible:outline-2 focus-visible:outline-accent-500",
+                              rail ? "justify-center px-0" : "px-3",
+                              active ? "bg-white/[0.12] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]" : "text-white/70 hover:bg-white/[0.06] hover:text-white",
+                            )}
+                          >
+                            {active && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent-500" />}
+                            <I aria-hidden className={cx("h-[18px] w-[18px] shrink-0", active ? "text-accent-500" : "text-white/55 group-hover:text-white/80")} />
+                            {rail ? <span className="sr-only">{item.label}</span> : <span className="flex-1">{item.label}</span>}
+                            {item.badge ? (
+                              <span
+                                className={cx("rounded-full bg-accent-500 px-1.5 text-[11px] font-bold text-brand-950 tabular", rail && "absolute right-1 top-1")}
+                                aria-label={`${item.badge} pendentes`}
+                              >
+                                {item.badge}
+                              </span>
+                            ) : null}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </nav>
-        <div className="m-3 rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
+        <div className={cx("m-3 rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10", rail && "hidden")}>
           <div className="flex items-center gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500 font-display text-sm font-bold text-brand-950">
               {initials(user.nome)}
@@ -173,16 +280,21 @@ export function AppShell({
             <Link href="/app" className="shrink-0 lg:hidden" aria-label="Bento — início">
               <BentoMark className="h-9 w-9" />
             </Link>
+            {current && (
+              <p className="hidden shrink-0 text-xs text-muted xl:block" aria-label="Seção atual">
+                {NAV_SECTIONS[current.section]} <span aria-hidden>›</span> <span className="font-semibold text-foreground">{current.label}</span>
+              </p>
+            )}
             <form action="/app/busca" role="search" className="relative max-w-xl flex-1">
               <label htmlFor="busca-global" className="sr-only">
-                Buscar por título, código, tema ou pessoa
+                Buscar nesta organização por título, código, tema ou pessoa
               </label>
               <Search aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 id="busca-global"
                 name="q"
                 type="search"
-                placeholder="Buscar título, código, tema ou pessoa…"
+                placeholder="Buscar nesta organização…"
                 className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm shadow-soft transition-colors placeholder:text-muted/70 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
               />
             </form>
@@ -216,12 +328,12 @@ export function AppShell({
           {demo && (
             <p role="note" className="border-t border-warning-600/25 bg-warning-100 px-4 py-1.5 text-center text-xs font-bold text-warning-600">
               <FlaskRound aria-hidden className="mr-1.5 inline h-3.5 w-3.5" />
-              Ambiente de demonstração · Dados simulados
+              AMBIENTE DE DEMONSTRAÇÃO | DADOS SIMULADOS
             </p>
           )}
         </header>
         {demo && (
-          <p className="hidden text-center text-xs font-bold print:block">Ambiente de demonstração · Dados simulados</p>
+          <p className="hidden text-center text-xs font-bold print:block">AMBIENTE DE DEMONSTRAÇÃO | DADOS SIMULADOS</p>
         )}
 
         <main id="conteudo" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">
@@ -234,12 +346,13 @@ export function AppShell({
         <ul className="mx-auto mb-2 flex max-w-xl items-stretch justify-between gap-1 rounded-[22px] border border-border/70 bg-surface/90 p-1.5 shadow-float backdrop-blur-xl">
           {primary.map((item) => {
             const I = ICONS[item.icon];
-            const active = isActive(item.href);
+            const active = isActive(item);
             return (
               <li key={item.href} className="flex-1">
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  aria-label={item.label}
                   className={cx(
                     "flex h-14 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-all",
                     active ? "bg-brand-800 text-white shadow-[0_6px_16px_-6px_rgb(15_74_46/0.6)]" : "text-muted hover:bg-brand-50 hover:text-brand-900",
@@ -285,10 +398,16 @@ export function AppShell({
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
+            {sections.map(({ sec, items }) => {
+              const rest = items.filter((i) => more.includes(i));
+              if (!rest.length) return null;
+              return (
+                <section key={sec} className="mb-3" aria-label={NAV_SECTIONS[sec]}>
+                  <h2 className="mb-1.5 px-1 text-[10.5px] font-bold uppercase tracking-[0.12em] text-muted">{NAV_SECTIONS[sec]}</h2>
             <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {more.map((item) => {
+              {rest.map((item) => {
                 const I = ICONS[item.icon];
-                const active = isActive(item.href);
+                const active = isActive(item);
                 return (
                   <li key={item.href}>
                     <Link
@@ -309,6 +428,9 @@ export function AppShell({
                 );
               })}
             </ul>
+                </section>
+              );
+            })}
             <div className="mt-4 mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-800 font-display text-sm font-bold text-white">{initials(user.nome)}</span>
               <div className="min-w-0 flex-1">

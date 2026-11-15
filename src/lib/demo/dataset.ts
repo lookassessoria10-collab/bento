@@ -571,3 +571,96 @@ export function buildDemoRows(d: DemoDataset, orgId: string) {
   };
 }
 export type DemoRows = ReturnType<typeof buildDemoRows>;
+
+// ---------------------------------------------------------------------------
+// Complemento (agenda fictícia): visitas futuras planejadas e compromissos dos ensaios ativos/planejados
+// ---------------------------------------------------------------------------
+const hhmm = z.string().regex(/^\d{2}:\d{2}$/);
+export const demoComplementSchema = z.object({
+  dataType: z.literal(DEMO_DATA_TYPE),
+  origem: z.literal("simulado"),
+  referenceDate: date,
+  plannedVisits: z.array(
+    z.object({ key: text, code: z.string().regex(/^DEMO-EA360-\d{3}$/), date, time: hhmm, status: z.enum(["planejada", "confirmada"]), title: text, observer: text }),
+  ),
+  events: z.array(
+    z.object({
+      key: text,
+      code: z.string().regex(/^DEMO-EA360-\d{3}$/),
+      type: z.enum(["avaliacao", "reuniao_revisao", "coleta", "prazo_entrega", "marco_encerramento", "outro"]),
+      title: text,
+      date,
+      status: z.enum(["planejado", "confirmado", "realizado", "reagendado", "cancelado"]),
+      completedAt: date.optional(),
+      responsible: text,
+      notes: text,
+    }),
+  ),
+  expectedCounts: z.object({ plannedVisits: z.number().int(), events: z.number().int(), realizedEvents: z.number().int() }),
+});
+export type DemoComplement = z.infer<typeof demoComplementSchema>;
+
+/** Valida o complemento contra o pacote principal: ensaio existente, nada futuro como realizado, visitas só no futuro. */
+export function parseDemoComplement(raw: unknown, d: DemoDataset): { data: DemoComplement | null; errors: string[] } {
+  const parsed = demoComplementSchema.safeParse(raw);
+  if (!parsed.success) return { data: null, errors: parsed.error.issues.slice(0, 20).map((i) => `${i.path.join(".")}: ${i.message}`) };
+  const c = parsed.data;
+  const errors: string[] = [];
+  const byCode = new Map(d.experiments.map((e) => [e.code, e]));
+  const keys = new Set<string>();
+  if (c.referenceDate !== d.asOfDate) errors.push(`referência do complemento (${c.referenceDate}) difere do pacote (${d.asOfDate})`);
+  for (const v of c.plannedVisits) {
+    if (keys.has(v.key)) errors.push(`chave duplicada ${v.key}`);
+    keys.add(v.key);
+    const e = byCode.get(v.code);
+    if (!e) errors.push(`${v.key}: ensaio ${v.code} não existe no pacote`);
+    else if (e.status !== "em_andamento" && e.status !== "planejado") errors.push(`${v.key}: visita futura só para ensaio em andamento ou planejado`);
+    if (v.date <= c.referenceDate) errors.push(`${v.key}: visita planejada deve ser posterior a ${c.referenceDate}`);
+  }
+  for (const ev of c.events) {
+    if (keys.has(ev.key)) errors.push(`chave duplicada ${ev.key}`);
+    keys.add(ev.key);
+    if (!byCode.has(ev.code)) errors.push(`${ev.key}: ensaio ${ev.code} não existe no pacote`);
+    if (ev.status === "realizado" && (!ev.completedAt || ev.completedAt > c.referenceDate)) errors.push(`${ev.key}: realizado exige data de realização até ${c.referenceDate}`);
+    if (ev.status !== "realizado" && ev.completedAt) errors.push(`${ev.key}: só compromissos realizados têm data de realização`);
+    if (ev.date > c.referenceDate && ev.status === "realizado") errors.push(`${ev.key}: compromisso futuro não pode estar realizado`);
+  }
+  const x = c.expectedCounts;
+  if (c.plannedVisits.length !== x.plannedVisits) errors.push(`contagem de visitas planejadas: ${c.plannedVisits.length} ≠ ${x.plannedVisits}`);
+  if (c.events.length !== x.events) errors.push(`contagem de compromissos: ${c.events.length} ≠ ${x.events}`);
+  if (c.events.filter((e) => e.status === "realizado").length !== x.realizedEvents) errors.push("contagem de compromissos realizados diverge");
+  return errors.length ? { data: null, errors } : { data: c, errors: [] };
+}
+
+export function buildComplementRows(c: DemoComplement, orgId: string) {
+  const base = { organization_id: orgId, is_demo: true };
+  const expId = (code: string) => demoUuid(`exp:${code}`);
+  const visitId = (k: string) => demoUuid(`plannedvisit:${k}`);
+  return {
+    visit_schedules: c.plannedVisits.map((v) => ({
+      ...base,
+      id: visitId(v.key),
+      titulo: `${v.title} (${v.code})`,
+      data_hora: `${v.date}T${v.time}:00-03:00`,
+      local: "Setor da unidade fictícia",
+      farm_id: demoUuid("farm:principal"),
+      interlocutores: `${v.observer} (fictício)`,
+      status: v.status,
+    })),
+    visit_schedule_experiments: c.plannedVisits.map((v) => ({ organization_id: orgId, visit_id: visitId(v.key), experiment_id: expId(v.code) })),
+    calendar_events: c.events.map((ev) => ({
+      ...base,
+      id: demoUuid(`event:${ev.key}`),
+      experiment_id: expId(ev.code),
+      tipo: ev.type,
+      titulo: ev.title,
+      data_prevista: ev.date,
+      dia_inteiro: true,
+      status: ev.status,
+      realizado_em: ev.status === "realizado" ? ev.completedAt! : null,
+      responsavel_descricao: `${ev.responsible} (fictício)`,
+      local_geral: "Unidade fictícia",
+      observacoes: `${ev.notes} ${DEMO_WARNING}`,
+    })),
+  };
+}

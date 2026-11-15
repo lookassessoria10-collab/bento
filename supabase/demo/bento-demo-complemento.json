@@ -1,0 +1,24 @@
+{
+  "dataType": "DADOS_TOTALMENTE_SINTETICOS",
+  "origem": "simulado",
+  "schemaVersion": "1.0.0",
+  "complementa": "bento-demo-dados.json",
+  "referenceDate": "2026-11-15",
+  "nota": "Agenda fictícia ancorada na data de referência fixa 15/11/2026. Datas absolutas: uma reexecução não as desloca. Nenhum compromisso futuro consta como realizado. Não contradiz o pacote original.",
+  "plannedVisits": [
+    { "key": "DEMO-EA360-013-P01", "code": "DEMO-EA360-013", "date": "2026-11-21", "time": "08:30", "status": "planejada", "title": "Revisita às parcelas após sete dias", "observer": "Técnico Demo B" },
+    { "key": "DEMO-EA360-004-P01", "code": "DEMO-EA360-004", "date": "2026-11-26", "time": "09:00", "status": "confirmada", "title": "Acompanhamento V4–V5 e parcela replantada", "observer": "Técnico Demo B" },
+    { "key": "DEMO-EA360-007-P01", "code": "DEMO-EA360-007", "date": "2026-11-27", "time": "08:00", "status": "planejada", "title": "Aferição padronizada de umidade", "observer": "Técnico Demo B" },
+    { "key": "DEMO-EA360-017-P01", "code": "DEMO-EA360-017", "date": "2026-11-30", "time": "09:30", "status": "planejada", "title": "Primeira visita após a instalação", "observer": "Técnico Demo C" }
+  ],
+  "events": [
+    { "key": "EV-013-REUNIAO", "code": "DEMO-EA360-013", "type": "reuniao_revisao", "title": "Reunião de revisão do protocolo de amostragem", "date": "2026-11-19", "status": "confirmado", "responsible": "Pesquisador Demo 03", "notes": "Pauta: diferença de emergência entre parcelas registrada em 14/11." },
+    { "key": "EV-017-INSTALACAO", "code": "DEMO-EA360-017", "type": "outro", "title": "Instalação prevista do ensaio", "date": "2026-11-23", "status": "planejado", "responsible": "Técnico Demo A", "notes": "Depende da conferência da documentação da instalação (pendência aberta)." },
+    { "key": "EV-004-AVALIACAO", "code": "DEMO-EA360-004", "type": "avaliacao", "title": "Avaliação de estande e altura (V5)", "date": "2026-11-26", "status": "planejado", "responsible": "Pesquisador Demo 04", "notes": "Parcela replantada avaliada separadamente." },
+    { "key": "EV-007-COLETA", "code": "DEMO-EA360-007", "type": "coleta", "title": "Coleta programada de amostras de solo", "date": "2026-12-02", "status": "planejado", "responsible": "Técnico Demo B", "notes": "Amostragem fictícia para a demonstração." },
+    { "key": "EV-004-PRAZO", "code": "DEMO-EA360-004", "type": "prazo_entrega", "title": "Entrega do resumo parcial de andamento", "date": "2026-12-10", "status": "planejado", "responsible": "Pesquisador Demo 04", "notes": "Resumo descritivo, sem resultado final." },
+    { "key": "EV-013-MARCO", "code": "DEMO-EA360-013", "type": "marco_encerramento", "title": "Encerramento previsto do ensaio", "date": "2027-03-15", "status": "planejado", "responsible": "Pesquisador Demo 03", "notes": "Igual ao término previsto do cadastro." },
+    { "key": "EV-015-DECISAO", "code": "DEMO-EA360-015", "type": "reuniao_revisao", "title": "Reunião sobre a interrupção do ensaio", "date": "2026-06-18", "status": "realizado", "completedAt": "2026-06-18", "responsible": "Pesquisador Demo 05", "notes": "Exercício didático: decisão de não reiniciar o protocolo nesta safra. Nenhum resultado final foi gerado." }
+  ],
+  "expectedCounts": { "plannedVisits": 4, "events": 7, "realizedEvents": 1 }
+}

@@ -21,21 +21,23 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
       .eq("revisor_id", ctx.userId),
   ]);
 
+  // Menu agrupado por seção. As URLs antigas continuam as mesmas; cada página repete a checagem de permissão no servidor.
   const nav: NavItem[] = [
-    { href: "/app", label: "Visão geral", icon: "dashboard" },
-    ...(has(ctx, "gestao.painel") ? [{ href: "/app/gestao", label: "Painel do gestor", icon: "gestao" } as NavItem] : []),
-    { href: "/app/experimentos", label: "Experimentos", icon: "experimentos" },
-    { href: "/app/visitas", label: "Visitas e acompanhamento", icon: "visitas" },
-    { href: "/app/atividades", label: "Atividades e pendências", icon: "atividades" },
-    { href: "/app/resultados", label: "Resultados", icon: "resultados" },
-    { href: "/app/biblioteca", label: "Biblioteca", icon: "biblioteca" },
-    { href: "/app/aprovacoes", label: "Revisões e aprovações", icon: "aprovacoes", badge: pendingReviews ?? 0 },
+    { href: "/app", label: "Painel geral", icon: "dashboard", section: "geral", match: ["/app/gestao", "/app/painel"] },
+    { href: "/app/calendario", label: "Calendário", icon: "calendario", section: "geral" },
+    { href: "/app/relatorios", label: "Relatórios", icon: "relatorios", section: "geral" },
+    { href: "/app/experimentos", label: "Ensaios", icon: "experimentos", section: "pesquisas" },
+    { href: "/app/visitas", label: "Acompanhamentos", icon: "visitas", section: "pesquisas" },
+    { href: "/app/resultados", label: "Resultados", icon: "resultados", section: "pesquisas" },
+    { href: "/app/atividades", label: "Pendências", icon: "atividades", section: "gestao" },
+    { href: "/app/aprovacoes", label: "Aprovações", icon: "aprovacoes", section: "gestao", badge: pendingReviews ?? 0 },
   ];
-  if (has(ctx, "editorial.criar") || hasFinalReview(ctx)) nav.push({ href: "/app/editorial", label: "Editorial", icon: "editorial" });
-  nav.push({ href: "/app/relatorios", label: "Relatórios", icon: "relatorios" });
-  nav.push({ href: "/app/equipe", label: "Equipe", icon: "equipe" });
-  nav.push({ href: "/app/configuracoes", label: "Configurações", icon: "configuracoes" });
-  nav.push({ href: "/app/ajuda", label: "Guia de uso", icon: "ajuda" });
+  if (has(ctx, "compartilhamentos.gerenciar")) nav.push({ href: "/app/compartilhamentos", label: "Compartilhamentos", icon: "compartilhamentos", section: "gestao" });
+  nav.push({ href: "/app/biblioteca", label: "Arquivos", icon: "biblioteca", section: "documentos" });
+  if (has(ctx, "editorial.criar") || hasFinalReview(ctx)) nav.push({ href: "/app/editorial", label: "Publicações", icon: "editorial", section: "documentos" });
+  nav.push({ href: "/app/equipe", label: "Equipe", icon: "equipe", section: "admin" });
+  nav.push({ href: "/app/configuracoes", label: "Configurações", icon: "configuracoes", section: "admin" });
+  nav.push({ href: "/app/ajuda", label: "Guia de uso", icon: "ajuda", section: "ajuda" });
 
   return (
     <AppShell

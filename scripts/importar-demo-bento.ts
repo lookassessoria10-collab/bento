@@ -15,7 +15,7 @@ import { execFileSync } from "node:child_process";
 import { config } from "dotenv";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "../src/lib/supabase/database.types";
-import { buildDemoRows, countDataset, demoUuid, parseDemoDataset, type DemoDataset, type DemoRows } from "../src/lib/demo/dataset";
+import { buildComplementRows, buildDemoRows, countDataset, demoUuid, parseDemoComplement, parseDemoDataset, type DemoDataset, type DemoRows } from "../src/lib/demo/dataset";
 
 config({ path: ".env.local" });
 
@@ -69,6 +69,14 @@ function loadDataset(): DemoDataset {
     r.errors.forEach((e) => console.error(`  • ${e}`));
     process.exit(1);
   }
+  return r.data;
+}
+
+/** Agenda fictícia complementar (supabase/demo/bento-demo-complemento.json), validada contra o pacote principal. */
+export function loadComplement(d: DemoDataset) {
+  const path = arg("complemento") ?? "supabase/demo/bento-demo-complemento.json";
+  const r = parseDemoComplement(JSON.parse(readFileSync(path, "utf8")), d);
+  if (!r.data) throw new Error(`Complemento rejeitado — nada foi gravado: ${r.errors.join(" | ")}`);
   return r.data;
 }
 
@@ -158,6 +166,8 @@ export async function dryRun(sb: DB | null, d: DemoDataset) {
     const upd = list.filter((r) => have.has(keyOf(t, r))).length;
     console.log(`  ${t.padEnd(28)} criar ${String(list.length - upd).padStart(4)} · atualizar ${String(upd).padStart(4)}`);
   }
+  const comp = buildComplementRows(loadComplement(d), demoUuid(`org:${d.demoOrganization.slug}`));
+  console.log(`  complemento: ${comp.visit_schedules.length} visitas futuras planejadas · ${comp.calendar_events.length} compromissos (upsert por id)`);
 }
 
 export async function apply(sb: DB, d: DemoDataset) {
@@ -199,6 +209,14 @@ export async function apply(sb: DB, d: DemoDataset) {
     console.log(`  ✓ ${t} (${list.length})`);
   }
 
+  const comp = buildComplementRows(loadComplement(d), org.id);
+  for (const [t, list] of [["visit_schedules", comp.visit_schedules], ["visit_schedule_experiments", comp.visit_schedule_experiments], ["calendar_events", comp.calendar_events]] as const) {
+    const onConflict = t === "visit_schedule_experiments" ? "visit_id,experiment_id" : "id";
+    const { error } = await sb.from(t).upsert(list as never, { onConflict });
+    ok(error, `gravação do complemento (${t})`);
+    console.log(`  ✓ complemento ${t} (${list.length})`);
+  }
+
   const email = arg("membro")?.toLowerCase();
   if (email) {
     const { data: prof } = await sb.from("profiles").select("id").eq("email", email).maybeSingle();
@@ -218,6 +236,7 @@ interface Check {
 }
 export async function verify(sb: DB, d: DemoDataset): Promise<Check[]> {
   const org = await resolveOrg(sb, d, false);
+  const comp = loadComplement(d);
   if (!org.exists) throw new Error("A organização de demonstração não existe neste banco.");
   const c = countDataset(d);
   const count = async (t: Table | "import_batches", extra?: (q: ReturnType<DB["from"]>) => unknown) => {
@@ -252,7 +271,10 @@ export async function verify(sb: DB, d: DemoDataset): Promise<Check[]> {
   const checks: Check[] = [
     { name: "organização marcada como demonstração", got: orgRow?.is_demo, want: true },
     { name: "experimentos", got: await count("experiments"), want: c.portfolioCount },
-    { name: "visitas (agendas)", got: await count("visit_schedules"), want: c.visits },
+    { name: "visitas realizadas (agendas)", got: await count("visit_schedules", (q) => q.eq("status", "realizada")), want: c.visits },
+    { name: "visitas futuras planejadas (complemento)", got: await count("visit_schedules", (q) => q.in("status", ["planejada", "confirmada"]).gt("data_hora", `${d.asOfDate}T23:59:59-03:00`)), want: comp.plannedVisits.length },
+    { name: "compromissos da agenda (complemento)", got: (await sb.from("calendar_events").select("*", { count: "exact", head: true }).eq("organization_id", org.id)).count ?? 0, want: comp.events.length },
+    { name: "compromissos realizados com data futura", got: (await sb.from("calendar_events").select("*", { count: "exact", head: true }).eq("organization_id", org.id).gt("realizado_em", d.asOfDate)).count ?? 0, want: 0 },
     { name: "fichas de visita", got: await count("visit_records"), want: c.visits },
     { name: "medições", got: await count("experiment_measurements"), want: c.measurements },
     { name: "ocorrências", got: await count("experiment_incidents"), want: c.incidents },

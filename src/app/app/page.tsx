@@ -1,55 +1,110 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, Circle } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Circle, FileText, Share2 } from "lucide-react";
 import { requireContext, has } from "@/lib/auth";
-import { fmtDate, fmtDateTime, fmtMonth, localDate } from "@/lib/format";
-import { PHASE_LABELS, VISIT_STATUS_LABELS } from "@/lib/labels";
+import { fmtDate, fmtDateTime, fmtMonth } from "@/lib/format";
+import { PHASE_LABELS } from "@/lib/labels";
 import { pilotMonth } from "@/lib/metrics";
 import { dashboardFilters, loadDashboard } from "@/lib/data/dashboard";
-import { listPeople } from "@/lib/data/lookups";
-import { BarList, Stat } from "@/components/charts";
-import { Alert, Card, CardBody, CardHeader, DemoBadge, Input, LinkButton, PageHeader, Select, StatusBadge, buttonClass, cx, optionsFrom } from "@/components/ui";
+import { loadPainel } from "@/lib/data/painel";
+import { applyFilters, filtersQuery, parseFilters, portfolio } from "@/lib/gestao";
+import {
+  ENTRY_STATUS_LABELS,
+  ENTRY_TIPO_LABELS,
+  FASES_STACK,
+  attentionItems,
+  delayedExperiments,
+  isOpenTask,
+  isOverdueEntry,
+  isOverdueTask,
+  statusByCulture,
+  upcoming,
+  visitCompliance,
+  visitsByMonth,
+} from "@/lib/painel";
+import { ClickableBars, FASE_COLORS, MonthlyPairs, StackedBars } from "@/components/charts-extra";
+import { Alert, Card, CardBody, CardHeader, EmptyState, LinkButton, PageHeader, StatusBadge, Table, Td, Th, buttonClass, cx } from "@/components/ui";
+import { DemoSeal, FilterForm } from "./gestao/componentes";
+import { Kpi, MetricInfo, ModeTabs, STATUS_TONE, entriesFor } from "./painel/componentes";
 
-export const metadata: Metadata = { title: "Visão geral" };
+export const metadata: Metadata = { title: "Painel geral" };
 
-export default async function DashboardPage({ searchParams }: PageProps<"/app">) {
+export default async function PainelGeral({ searchParams }: PageProps<"/app">) {
   const ctx = await requireContext();
   const sp = await searchParams;
-  const f = dashboardFilters(sp);
-  const [d, people, { data: milestones }] = await Promise.all([
-    loadDashboard(ctx, f),
-    listPeople(ctx),
+  const f = parseFilters(sp);
+  const [load, pilot, { data: milestones }] = await Promise.all([
+    loadPainel(ctx),
+    loadDashboard(ctx, dashboardFilters({})),
     ctx.supabase.from("pilot_milestones").select("id, mes, titulo, status").eq("organization_id", ctx.orgId).order("mes"),
   ]);
-  const today = localDate();
-  const pm = pilotMonth(ctx.settings?.piloto_inicio ?? null, today);
+  const { ref, demo } = load;
+  const d = applyFilters(load.data, f);
+  const p = portfolio(d.experiments);
+  const byId = new Map(load.data.experiments.map((e) => [e.id, e]));
+  const entries = entriesFor(load.schedules, load.events, d, load.data);
+  const ids = new Set(d.experiments.map((e) => e.id));
+  const tasks = load.tasksFull.filter((t) => !t.experiment_id || ids.has(t.experiment_id));
+  const inPeriod = (x: string) => (!f.de || x >= f.de) && (!f.ate || x <= f.ate);
+  const delayed = delayedExperiments(d.experiments, entries, tasks, ref);
+  const open = d.incidents.filter((i) => i.status === "aberta" || i.status === "em_acompanhamento");
+  const next30 = upcoming(entries, ref, 30);
+  const nextVisits = next30.filter((e) => e.tipo === "visita");
+  const openTasks = tasks.filter(isOpenTask);
+  const compliance = visitCompliance(entries.filter((e) => inPeriod(e.data)), ref);
+  const attention = attentionItems(d.incidents, tasks, entries, ref, 5);
+  const months = visitsByMonth(entries.filter((e) => inPeriod(e.data)));
+  const q = filtersQuery(f);
+  const canGestor = has(ctx, "gestao.painel");
+  const lastStage = (expId: string) =>
+    d.visits.filter((v) => v.experiment_id === expId).sort((a, b) => b.data.localeCompare(a.data))[0]?.etapa_atual ?? null;
+  const timeline = [
+    ...entries.filter((e) => isOverdueEntry(e, ref)).map((e) => ({ e, kind: "atraso" as const })),
+    ...next30.map((e) => ({ e, kind: "proximo" as const })),
+    ...entries.filter((e) => e.status === "realizado" && e.tipo !== "visita").slice(-3).map((e) => ({ e, kind: "concluido" as const })),
+  ].sort((a, b) => a.e.data.localeCompare(b.e.data));
+  const pm = pilotMonth(ctx.settings?.piloto_inicio ?? null, ref);
   const totalMeses = (ctx.settings?.piloto_meses ?? 6) + (ctx.settings?.piloto_prorrogacao_meses ?? 0);
-  const isEmpty = d.experimentos.total === 0;
-
+  const isEmpty = load.data.experiments.length === 0;
   const onboarding: [string, boolean, string][] = [
     ["Configurar organização e situação institucional", !!ctx.settings?.piloto_inicio, "/app/configuracoes"],
     ["Convidar a equipe", false, "/app/equipe"],
     ["Cadastrar fazenda e áreas", false, "/app/configuracoes?aba=fazenda"],
-    ["Cadastrar o primeiro experimento", !isEmpty, "/app/experimentos/novo"],
-    ["Agendar uma visita", d.visitas.previstas + d.visitas.realizadas > 0, "/app/visitas/nova"],
-    ["Registrar informações na ficha", d.taxa.numerador > 0, "/app/visitas"],
-    ["Solicitar revisão de um conteúdo", d.revisao.conferencia + d.revisao.validacao + d.revisao.final > 0, "/app/editorial"],
-    ["Preparar a publicação", d.revisao.liberados > 0 || d.boletins.publicados > 0, "/app/editorial/boletins"],
+    ["Cadastrar o primeiro ensaio", !isEmpty, "/app/experimentos/novo"],
+    ["Agendar um acompanhamento", load.schedules.length > 0, "/app/visitas/nova"],
+    ["Registrar informações na ficha", pilot.taxa.numerador > 0, "/app/visitas"],
+    ["Solicitar revisão de um conteúdo", pilot.revisao.conferencia + pilot.revisao.validacao + pilot.revisao.final > 0, "/app/editorial"],
+    ["Preparar a publicação", pilot.revisao.liberados > 0 || pilot.boletins.publicados > 0, "/app/editorial/boletins"],
   ];
+  const filesPend = load.filesByAuth.filter((x) => x.revisao_status === "pendente").length;
+  const filesLib = load.filesByAuth.filter((x) => x.autorizacao_uso === "divulgacao_autorizada").length;
 
   return (
     <>
       <PageHeader
-        title={`Olá, ${ctx.nome.split(" ")[0]}`}
-        description={`${ctx.settings?.nome_projeto ?? "Entomo Agro 360"} · ${pm ? `mês ${pm} de ${totalMeses} do piloto` : "início do piloto não configurado"} · indicadores de ${fmtDate(f.de)} a ${fmtDate(f.ate)}`}
+        title="Visão geral"
+        description={
+          <>
+            {ctx.orgNome} · {f.de || f.ate ? `período ${f.de ? fmtDate(f.de) : "início"} a ${f.ate ? fmtDate(f.ate) : fmtDate(ref)}` : "todo o histórico"} · referência {fmtDate(ref)}
+            {p.ultimaAtualizacao && <> · última atualização {fmtDateTime(p.ultimaAtualizacao)}</>}
+            {pm && <> · mês {pm} de {totalMeses} do piloto</>}
+          </>
+        }
         actions={
-          has(ctx, "experimentos.criar") && (
-            <LinkButton variant="primary" href="/app/experimentos/novo">
-              Novo experimento
-            </LinkButton>
-          )
+          <>
+            <Link href={canGestor ? `/app/gestao/relatorio${q ? `?${q}` : ""}` : "/app/relatorios"} className={buttonClass("secondary")}>
+              <FileText aria-hidden className="h-4 w-4" /> Gerar relatório
+            </Link>
+            {has(ctx, "compartilhamentos.gerenciar") && (
+              <Link href={`/app/compartilhamentos/novo${q ? `?${q}` : ""}`} className={buttonClass("primary")}>
+                <Share2 aria-hidden className="h-4 w-4" /> Compartilhar painel
+              </Link>
+            )}
+          </>
         }
       />
+      <ModeTabs current="geral" f={f} canGestor={canGestor} />
+      {demo && <DemoSeal className="mb-4" />}
 
       {!ctx.settings?.onboarding_concluido && (isEmpty || has(ctx, "configuracoes.editar")) && (
         <Card className="mb-5">
@@ -73,115 +128,248 @@ export default async function DashboardPage({ searchParams }: PageProps<"/app">)
         </Card>
       )}
 
-      <details className="mb-5 rounded-xl border border-border bg-surface p-3" open={Object.values(sp).some(Boolean)}>
-        <summary className="cursor-pointer text-sm font-medium">Filtros dos indicadores</summary>
-        <form className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-7" aria-label="Filtros do painel">
-          <label className="text-xs text-muted">
-            De
-            <Input name="de" type="date" defaultValue={f.de} />
-          </label>
-          <label className="text-xs text-muted">
-            Até
-            <Input name="ate" type="date" defaultValue={f.ate} />
-          </label>
-          <label className="text-xs text-muted">
-            Área
-            <Input name="area" defaultValue={f.area} />
-          </label>
-          <label className="text-xs text-muted">
-            Cultura
-            <Input name="cultura" defaultValue={f.cultura} />
-          </label>
-          <label className="text-xs text-muted">
-            Responsável
-            <Select name="responsavel" defaultValue={f.responsavel} options={people.map((p) => ({ value: p.id, label: p.nome }))} placeholder="Todos" />
-          </label>
-          <label className="text-xs text-muted">
-            Fase
-            <Select name="fase" defaultValue={f.fase} options={optionsFrom(PHASE_LABELS)} placeholder="Todas" />
-          </label>
-          <div className="flex items-end gap-2">
-            <button className={buttonClass("primary", "md")}>Aplicar</button>
-            <Link className="text-sm text-brand-700 underline" href="/app">
-              Limpar
-            </Link>
-          </div>
-        </form>
-      </details>
+      <Card className="no-print mb-6 p-4">
+        <FilterForm all={load.data} f={f} action="/app" />
+      </Card>
 
-      {isEmpty ? (
-        <Alert tone="info" title="Ainda não há experimentos cadastrados">
-          Os indicadores aparecem conforme os dados reais forem registrados. Comece pelo cadastro de experimentos com fonte e data das informações.
+      {load.error ? (
+        <Alert tone="danger" title="Não foi possível carregar todos os registros.">
+          Tente novamente em instantes. Nenhum número foi estimado para compensar a falha.
         </Alert>
+      ) : isEmpty ? (
+        <Alert tone="info" title="Ainda não há ensaios cadastrados">
+          Os indicadores aparecem conforme os dados reais forem registrados. Comece pelo cadastro de ensaios com fonte e data das informações.
+        </Alert>
+      ) : !d.experiments.length ? (
+        <EmptyState title="Nenhum ensaio corresponde aos filtros." action={<Link href="/app" className={buttonClass("secondary")}>Limpar filtros</Link>} />
       ) : (
-        <>
-          <section aria-label="Indicadores principais" className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-            <Stat label="Experimentos" value={d.experimentos.total} hint={`${d.experimentos.ativos} em acompanhamento ativo`} />
-            <Stat
-              label={`Registros devidos — ${fmtMonth(today.slice(0, 7))}`}
-              value={d.taxa.percentual === null ? "—" : `${d.taxa.percentual}%`}
-              hint={`${d.taxa.numerador} de ${d.taxa.denominador} elegíveis`}
-              tone={d.taxa.percentual !== null && d.taxa.percentual < 50 ? "warning" : "default"}
+        <div className="space-y-6">
+          <section aria-label="Indicadores principais" className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-7">
+            <Kpi label="Total de ensaios" value={p.total} hint="na seleção" href="/app/experimentos" metric="ensaios_total" />
+            <Kpi label="Em andamento" value={p.porFase.andamento} hint={`${p.porFase.implantacao} em implantação · ${p.porFase.planejado} planejado(s)`} href="/app/experimentos?fase=andamento" metric="ensaios_andamento" />
+            <Kpi label="Concluídos" value={p.porFase.concluido} hint={p.porFase.interrompido ? `${p.porFase.interrompido} interrompido(s)` : "nenhum interrompido"} href="/app/experimentos?fase=concluido" />
+            <Kpi
+              label="Em atraso"
+              value={p.porFase.andamento + p.porFase.implantacao ? delayed.length : "—"}
+              hint={p.porFase.andamento + p.porFase.implantacao ? "com compromisso ou pendência vencidos" : "Dados insuficientes: nenhum ensaio ativo"}
+              tone={delayed.length ? "warning" : "default"}
+              metric="ensaios_atraso"
             />
-            <Stat label="Visitas previstas" value={d.visitas.previstas} hint={`${d.visitas.realizadas} realizadas · ${d.visitas.adiadas} adiadas`} />
-            <Stat label="Pendências abertas" value={d.pendencias.abertas} hint={`${d.pendencias.resolvidasNoPeriodo} resolvidas no período`} />
-            <Stat label="Pendências vencidas" value={d.pendencias.vencidas} tone={d.pendencias.vencidas ? "danger" : "default"} />
-            <Stat label="Boletins publicados" value={`${d.boletins.publicados}/${ctx.settings?.meta_boletins ?? 2}`} hint={`${d.boletins.preparacao} em preparação`} />
+            <Kpi
+              label="Ocorrências abertas"
+              value={open.length}
+              hint={`${open.filter((i) => i.gravidade === "alta" || i.gravidade === "critica").length} de gravidade alta/crítica`}
+              tone={open.some((i) => i.gravidade === "alta" || i.gravidade === "critica") ? "danger" : open.length ? "warning" : "default"}
+              href={canGestor ? `/app/gestao${q ? `?${q}` : ""}#bloco-c` : undefined}
+              metric="ocorrencias_abertas"
+            />
+            <Kpi label="Visitas (30 dias)" value={nextVisits.length} hint={`${nextVisits.filter((e) => e.status === "confirmado").length} confirmada(s), as demais planejadas`} href="/app/calendario?vista=lista" metric="visitas_proximas" />
+            <Kpi
+              label="Pendências abertas"
+              value={openTasks.length}
+              hint={`${openTasks.filter((t) => isOverdueTask(t, ref)).length} vencida(s)`}
+              tone={openTasks.some((t) => isOverdueTask(t, ref)) ? "warning" : "default"}
+              href="/app/atividades?vista=lista"
+              metric="pendencias_abertas"
+            />
           </section>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
             <Card>
-              <CardHeader title="Por fase do experimento" description="Situação do experimento ≠ situação de revisão/publicação." />
+              <CardHeader title="Onde estão os estudos?" description="Ensaios por cultura. Clique para filtrar a página." />
               <CardBody>
-                <BarList caption="Experimentos por fase" data={d.experimentos.porFase.map((x) => ({ ...x, label: PHASE_LABELS[x.label as keyof typeof PHASE_LABELS] ?? x.label }))} />
+                <ClickableBars
+                  caption="Ensaios por cultura"
+                  active={f.cultura}
+                  data={p.culturas.map((c) => ({ key: c.label, label: c.label[0].toUpperCase() + c.label.slice(1), value: c.value }))}
+                  hrefFor={(k) => `/app?${filtersQuery({ ...f, cultura: f.cultura === k ? "" : k })}`}
+                />
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="Por cultura" />
+              <CardHeader title="Em que situação estão?" description="Status dos ensaios por cultura." />
               <CardBody>
-                <BarList caption="Experimentos por cultura" data={d.experimentos.porCultura} />
+                <StackedBars
+                  caption="Status por cultura"
+                  rows={statusByCulture(d.experiments).map((r) => ({ label: r.cultura[0].toUpperCase() + r.cultura.slice(1), counts: r.counts, total: r.total }))}
+                  series={FASES_STACK.map((k) => ({ key: k, label: PHASE_LABELS[k], color: FASE_COLORS[k] }))}
+                />
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="Por área temática e local" />
-              <CardBody className="space-y-4">
-                <BarList caption="Experimentos por área temática" data={d.experimentos.porArea} />
-                <BarList caption="Experimentos por local" data={d.experimentos.porLocal} />
+              <CardHeader title="O cronograma de visitas está sendo cumprido?" description="Visitas realizadas × agendadas por mês." />
+              <CardBody>
+                <MonthlyPairs caption="Visitas por mês" data={months} refMonth={ref.slice(0, 7)} fmt={fmtMonth} />
+                <p className="mt-2 text-sm">
+                  Cumprimento:{" "}
+                  <strong className="tabular">{compliance.percentual === null ? "Dados insuficientes" : `${compliance.percentual.toLocaleString("pt-BR")}%`}</strong>{" "}
+                  <span className="text-xs text-muted">
+                    ({compliance.numerador} de {compliance.denominador} visitas vencidas)
+                  </span>
+                </p>
+                <MetricInfo k="cumprimento_visitas" />
               </CardBody>
             </Card>
           </div>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            <Card>
-              <CardHeader title="Revisão de conteúdos" description="Fila atual (sem filtro de período)." />
+          <div className="grid gap-5 2xl:grid-cols-5">
+            <Card className="2xl:col-span-3">
+              <CardHeader
+                title={
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle aria-hidden className="h-4 w-4 text-warning-600" /> O que exige ação agora?
+                  </span>
+                }
+                description="As cinco ocorrências, pendências e compromissos mais críticos."
+              />
               <CardBody>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex justify-between">
-                    Em conferência interna <strong className="tabular">{d.revisao.conferencia}</strong>
-                  </li>
-                  <li className="flex justify-between">
-                    Aguardando validação científica <strong className="tabular">{d.revisao.validacao}</strong>
-                  </li>
-                  <li className="flex justify-between">
-                    Aguardando revisão final <strong className="tabular">{d.revisao.final}</strong>
-                  </li>
-                  <li className="flex justify-between">
-                    Liberados, a publicar <strong className="tabular">{d.revisao.liberados}</strong>
-                  </li>
-                </ul>
-                <LinkButton size="sm" className="mt-3" href="/app/aprovacoes">
-                  Abrir filas
+                {attention.length ? (
+                  <Table caption="Itens que exigem atenção">
+                    <thead>
+                      <tr>
+                        <Th>Item</Th>
+                        <Th>Ensaio</Th>
+                        <Th>Responsável</Th>
+                        <Th>Prazo</Th>
+                        <Th>Criticidade</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attention.map((a, i) => (
+                        <tr key={`${a.tipo}-${i}`}>
+                          <Td>
+                            <Link href={a.href} className="font-medium text-brand-700 hover:underline">
+                              {a.tipo}: {a.titulo}
+                            </Link>
+                          </Td>
+                          <Td className="whitespace-nowrap font-mono text-xs">{a.experiment_id ? byId.get(a.experiment_id)?.codigo : "—"}</Td>
+                          <Td className="text-xs">{a.responsavel ?? <span className="text-muted">Não informado</span>}</Td>
+                          <Td className="whitespace-nowrap text-xs">{a.data ? fmtDate(a.data) : <span className="text-muted">sem prazo</span>}</Td>
+                          <Td className="text-xs">{a.criticidade}</Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                ) : (
+                  <p className="text-sm text-muted">Nada vencido ou em aberto na seleção.</p>
+                )}
+              </CardBody>
+            </Card>
+            <Card className="2xl:col-span-2">
+              <CardHeader title="Linha do tempo do cronograma" description="Atrasos, próximos 30 dias e marcos concluídos." />
+              <CardBody>
+                {timeline.length ? (
+                  <ol className="space-y-2 border-l-2 border-border pl-4">
+                    {timeline.slice(0, 10).map(({ e, kind }) => (
+                      <li key={e.key + kind} className="relative text-sm">
+                        <span
+                          aria-hidden
+                          className={cx("absolute -left-[23px] top-1.5 h-3 w-3 rounded-full ring-2 ring-surface", kind === "atraso" ? "bg-danger-600" : kind === "concluido" ? "bg-brand-700" : "border-2 border-dashed border-info-600 bg-surface")}
+                        />
+                        <p className="text-xs text-muted">
+                          {fmtDate(e.data)} · {kind === "atraso" ? <strong className="text-danger-600">vencido</strong> : kind === "concluido" ? "concluído" : ENTRY_STATUS_LABELS[e.status].toLowerCase()}
+                        </p>
+                        <Link href={e.href} className="hover:underline">
+                          {ENTRY_TIPO_LABELS[e.tipo]}: {e.titulo}
+                        </Link>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-sm text-muted">Nenhum compromisso vencido ou previsto para os próximos 30 dias.</p>
+                )}
+                <Link href="/app/calendario" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
+                  <CalendarDays aria-hidden className="h-4 w-4" /> Abrir o calendário
+                </Link>
+              </CardBody>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader title="Próximos acompanhamentos" description="Visitas planejadas ou confirmadas. Planejada não é o mesmo que confirmada." />
+            <CardBody>
+              {nextVisits.length ? (
+                <Table caption="Próximos acompanhamentos">
+                  <thead>
+                    <tr>
+                      <Th>Data</Th>
+                      <Th>Ensaio</Th>
+                      <Th>Cultura</Th>
+                      <Th>Última etapa registrada</Th>
+                      <Th>Responsável</Th>
+                      <Th>Status</Th>
+                      <Th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nextVisits.map((e) => {
+                      const ex = byId.get(e.experiment_ids[0]);
+                      return (
+                        <tr key={e.key}>
+                          <Td className="whitespace-nowrap">
+                            {fmtDate(e.data)} {e.hora && <span className="text-xs text-muted">{e.hora}</span>}
+                          </Td>
+                          <Td className="font-mono text-xs">{ex?.codigo ?? "—"}</Td>
+                          <Td>{ex?.culturas.join(", ") ?? "—"}</Td>
+                          <Td className="text-xs">{(ex && lastStage(ex.id)) ?? <span className="text-muted">sem registro</span>}</Td>
+                          <Td className="text-xs">{ex?.responsavel ?? <span className="text-muted">Não informado</span>}</Td>
+                          <Td>
+                            <span className={cx("inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ring-1", STATUS_TONE[e.status])}>{ENTRY_STATUS_LABELS[e.status]}</span>
+                          </Td>
+                          <Td>
+                            <Link href={`/app/calendario?vista=semana&data=${e.data}`} className="text-xs font-semibold text-brand-700 hover:underline">
+                              No calendário
+                            </Link>
+                          </Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted">Ainda não agendada: nenhuma visita planejada para os próximos 30 dias.</p>
+              )}
+            </CardBody>
+          </Card>
+
+          <div className="grid gap-5 lg:grid-cols-3">
+            <Card>
+              <CardHeader title="Situação documental" description="Arquivos e conteúdos que você pode consultar." />
+              <CardBody className="space-y-1.5 text-sm">
+                <p className="flex justify-between">
+                  Arquivos registrados <strong className="tabular">{load.filesByAuth.length}</strong>
+                </p>
+                <p className="flex justify-between">
+                  Relatórios <strong className="tabular">{load.filesByAuth.filter((x) => x.tipo === "relatorio").length}</strong>
+                </p>
+                <p className="flex justify-between">
+                  Pendentes de conferência <strong className="tabular">{filesPend}</strong>
+                </p>
+                <p className="flex justify-between">
+                  Liberados para divulgação <strong className="tabular">{filesLib}</strong>
+                </p>
+                <p className="flex justify-between">
+                  Conteúdos em revisão <strong className="tabular">{pilot.revisao.conferencia + pilot.revisao.validacao + pilot.revisao.final}</strong>
+                </p>
+                <p className="flex justify-between">
+                  Liberados, a publicar <strong className="tabular">{pilot.revisao.liberados}</strong>
+                </p>
+                <LinkButton size="sm" className="mt-2" href={`/app/painel/documentos${q ? `?${q}` : ""}`}>
+                  Ver documentos e aprovações
                 </LinkButton>
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="Sem atualização devida neste mês" description="Elegíveis sem ficha enviada (exclui encerrados sem atualização prevista)." />
+              <CardHeader title={`Taxa de atualização — ${fmtMonth(ref.slice(0, 7))}`} description="Regra do piloto: ensaios com atualização devida no mês." />
               <CardBody>
-                {d.experimentos.semAtualizacao.length === 0 ? (
-                  <p className="text-sm text-muted">Nenhum experimento pendente.</p>
-                ) : (
-                  <ul className="space-y-1 text-sm">
-                    {d.experimentos.semAtualizacao.slice(0, 10).map((e) => (
+                <p className="font-display text-3xl font-semibold tabular text-brand-950">{pilot.taxa.percentual === null ? "Dados insuficientes" : `${pilot.taxa.percentual}%`}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {pilot.taxa.numerador} de {pilot.taxa.denominador} elegíveis
+                </p>
+                <MetricInfo k="taxa_atualizacao" />
+                {pilot.experimentos.semAtualizacao.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {pilot.experimentos.semAtualizacao.slice(0, 5).map((e) => (
                       <li key={e.id}>
                         <Link className="hover:underline" href={`/app/experimentos/${e.id}`}>
                           <span className="font-mono text-xs">{e.codigo}</span> {e.titulo}
@@ -190,74 +378,29 @@ export default async function DashboardPage({ searchParams }: PageProps<"/app">)
                     ))}
                   </ul>
                 )}
-                <details className="mt-2 text-xs text-muted">
-                  <summary className="cursor-pointer">Como é calculado</summary>
-                  <ul className="mt-1 list-disc pl-4">
-                    {d.taxa.regras.map((r) => (
-                      <li key={r}>{r}</li>
-                    ))}
-                  </ul>
-                </details>
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="Agenda" description="Próximos 7 e 30 dias (horário da Bahia)." />
+              <CardHeader title="Linha do tempo do piloto" description={ctx.settings?.piloto_inicio ? `Início em ${fmtDate(ctx.settings.piloto_inicio)} · ${totalMeses} meses` : "Início do piloto não configurado."} />
               <CardBody>
-                {d.agenda.length === 0 ? (
-                  <p className="text-sm text-muted">Nenhuma visita agendada nos próximos 30 dias.</p>
-                ) : (
-                  <ul className="space-y-2 text-sm">
-                    {d.agenda.map((v) => (
-                      <li key={v.id} className={cx("rounded-lg border p-2", v.em7 ? "border-accent-500" : "border-border")}>
-                        <Link className="font-medium hover:underline" href={`/app/visitas/${v.id}`}>
-                          {v.titulo}
-                        </Link>
-                        <p className="text-xs text-muted">
-                          {fmtDateTime(v.data_hora)} · {VISIT_STATUS_LABELS[v.status]} {v.em7 && "· próximos 7 dias"}
-                        </p>
+                {(milestones ?? []).length ? (
+                  <ol className="grid grid-cols-2 gap-2">
+                    {(milestones ?? []).map((m) => (
+                      <li key={m.id} className={cx("rounded-lg border p-2 text-sm", pm === m.mes ? "border-brand-600 bg-brand-50" : "border-border")} aria-current={pm === m.mes ? "step" : undefined}>
+                        <p className="text-xs font-semibold text-muted">Mês {m.mes}</p>
+                        <p className="font-medium">{m.titulo}</p>
+                        <StatusBadge status={m.status === "concluido" ? "concluida" : m.status === "em_andamento" ? "em_andamento" : "a_fazer"} label={m.status.replace("_", " ")} />
                       </li>
                     ))}
-                  </ul>
+                  </ol>
+                ) : (
+                  <p className="text-sm text-muted">Sem marcos do piloto cadastrados para esta organização.</p>
                 )}
               </CardBody>
             </Card>
           </div>
-        </>
+        </div>
       )}
-
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader title="Linha do tempo do piloto" description={ctx.settings?.piloto_inicio ? `Início em ${fmtDate(ctx.settings.piloto_inicio)} · ${totalMeses} meses` : "Configure o início real do piloto em Configurações."} />
-          <CardBody>
-            <ol className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {(milestones ?? []).map((m) => (
-                <li key={m.id} className={cx("rounded-lg border p-2 text-sm", pm === m.mes ? "border-brand-600 bg-brand-50" : "border-border")} aria-current={pm === m.mes ? "step" : undefined}>
-                  <p className="text-xs font-semibold text-muted">Mês {m.mes}</p>
-                  <p className="font-medium">{m.titulo}</p>
-                  <StatusBadge status={m.status === "concluido" ? "concluida" : m.status === "em_andamento" ? "em_andamento" : "a_fazer"} label={m.status.replace("_", " ")} />
-                </li>
-              ))}
-            </ol>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Atualizações recentes" />
-          <CardBody>
-            <ul className="space-y-2 text-sm">
-              {d.recentes.map((e) => (
-                <li key={e.id}>
-                  <Link className="hover:underline" href={`/app/experimentos/${e.id}`}>
-                    <span className="font-mono text-xs">{e.codigo}</span> {e.titulo_curto || e.titulo}
-                  </Link>
-                  {e.is_demo && <span className="ml-1"><DemoBadge /></span>}
-                  <p className="text-xs text-muted">{fmtDateTime(e.updated_at)}</p>
-                </li>
-              ))}
-              {!d.recentes.length && <li className="text-muted">Sem atualizações.</li>}
-            </ul>
-          </CardBody>
-        </Card>
-      </div>
     </>
   );
 }
