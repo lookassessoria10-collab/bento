@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2, X, XCircle } from "lucide-react";
 import type { ActionResult } from "@/lib/actions";
 import { buttonClass, cx } from "@/components/ui";
 
 type ServerAction = (fd: FormData) => Promise<ActionResult>;
+const noopSubscribe = () => () => {};
 
 /**
  * Formulário ligado a uma Server Action. Não reinicia os campos em caso de erro,
@@ -32,16 +33,19 @@ export function ActionForm({
   const [pending, start] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  // Erros: marca os campos e leva a pessoa até o primeiro deles. Espera o fim do envio, porque campos
+  // dentro do fieldset desabilitado não recebem foco (e em formulários longos o aviso ficava fora da tela).
   useEffect(() => {
     const form = formRef.current;
-    if (!form) return;
+    if (!form || pending) return;
     form.querySelectorAll("[data-field-error-client]").forEach((n) => n.remove());
     form.querySelectorAll("[aria-invalid=true]").forEach((n) => n.removeAttribute("aria-invalid"));
-    if (!result?.fieldErrors) return;
+    if (!result || result.ok) return;
     let first: HTMLElement | null = null;
-    for (const [name, msg] of Object.entries(result.fieldErrors)) {
+    for (const [name, msg] of Object.entries(result.fieldErrors ?? {})) {
       const el = form.querySelector<HTMLElement>(`[name="${CSS.escape(name)}"]`);
       if (!el) continue;
       el.setAttribute("aria-invalid", "true");
@@ -52,13 +56,19 @@ export function ActionForm({
       el.insertAdjacentElement("afterend", p);
       first ??= el;
     }
-    first?.focus();
-  }, [result]);
+    const target = first ?? resultRef.current;
+    target?.scrollIntoView({ block: "center", behavior: "smooth" });
+    first?.focus({ preventScroll: true });
+  }, [result, pending]);
+
+  const errorCount = result && !result.ok ? Object.keys(result.fieldErrors ?? {}).length : 0;
 
   return (
     <form
       ref={formRef}
       id={id}
+      // sem JavaScript (antes de a página ficar interativa) nada vai para a URL: envio nativo seria POST
+      method="post"
       aria-busy={pending}
       onSubmit={(e) => {
         e.preventDefault();
@@ -84,14 +94,19 @@ export function ActionForm({
       </fieldset>
       {result && (
         <div
+          ref={resultRef}
           role={result.ok ? "status" : "alert"}
           className={cx(
             "mt-3 flex items-start gap-2 rounded-lg px-3 py-2 text-sm",
-            result.ok ? "bg-brand-50 text-brand-800" : "bg-danger-100 text-danger-600",
+            // erro fica visível no rodapé da tela enquanto o formulário estiver à vista (acima da barra de salvar)
+            result.ok ? "bg-brand-50 text-brand-800" : "sticky bottom-24 z-20 bg-danger-100 text-danger-600 shadow-float ring-1 ring-danger-600/20 lg:bottom-20",
           )}
         >
           {result.ok ? <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4" /> : <XCircle aria-hidden className="mt-0.5 h-4 w-4" />}
-          <span>{result.message}</span>
+          <span>
+            {result.message}
+            {errorCount > 0 && ` ${errorCount === 1 ? "1 campo precisa" : `${errorCount} campos precisam`} de ajuste (marcado${errorCount === 1 ? "" : "s"} em vermelho).`}
+          </span>
         </div>
       )}
       {pending && <span className="sr-only" aria-live="polite">Salvando…</span>}
@@ -114,8 +129,10 @@ export function SubmitButton({
   name?: string;
   value?: string;
 }) {
+  // só habilita depois que a página fica interativa: um envio nativo antes disso recarregaria a tela sem salvar
+  const ready = useSyncExternalStore(noopSubscribe, () => true, () => false);
   return (
-    <button type="submit" name={name} value={value} className={buttonClass(variant, size, className)}>
+    <button type="submit" name={name} value={value} disabled={!ready} aria-disabled={!ready} className={buttonClass(variant, size, className)}>
       <Loader2 aria-hidden className="hidden h-4 w-4 animate-spin [fieldset:disabled_&]:inline" />
       {children}
     </button>

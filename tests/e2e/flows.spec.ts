@@ -124,6 +124,8 @@ test("4–5. visita: agendar, realizar, preencher, conferir; pendência vira tar
   await page.goto("/app/atividades?vista=quadro&filtro=todas");
   const card = page.getByRole("listitem").filter({ hasText: "[TESTE] Confirmar data da próxima avaliação" }).first();
   await card.getByRole("combobox").selectOption("concluida");
+  // o quadro salva em segundo plano: espera a gravação terminar antes de sair da página
+  await page.waitForLoadState("networkidle");
   await page.goto("/app/atividades?filtro=concluidas&vista=lista");
   await expect(page.getByText("[TESTE] Confirmar data da próxima avaliação").first()).toBeVisible();
 });
